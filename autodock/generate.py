@@ -83,9 +83,11 @@ def assert_safe_compose(compose_yaml: str) -> None:
         raise UnsafeComposeError(f"compose YAML did not parse: {exc}") from exc
     if not isinstance(data, dict):
         raise UnsafeComposeError("compose YAML did not produce a mapping")
-    services = data.get("services") or {}
-    if not isinstance(services, dict):
-        raise UnsafeComposeError("services block is not a mapping")
+    if "services" not in data:
+        raise UnsafeComposeError("services block is missing")
+    services = data["services"]
+    if not isinstance(services, dict) or not services:
+        raise UnsafeComposeError("services block is empty or not a mapping")
 
     for name, svc in services.items():
         if not isinstance(svc, dict):
@@ -103,7 +105,10 @@ def assert_safe_compose(compose_yaml: str) -> None:
         caps = svc.get("cap_add") or []
         if isinstance(caps, list):
             for cap in caps:
-                if str(cap).lower().lstrip("cap_") in _DANGEROUS_CAPS:
+                low = str(cap).lower()
+                if low.startswith("cap_"):
+                    low = low[4:]
+                if low in _DANGEROUS_CAPS:
                     raise UnsafeComposeError(f"cap_add {cap!r} is not allowed", service=name)
         sec_opts = svc.get("security_opt") or []
         if isinstance(sec_opts, list):
