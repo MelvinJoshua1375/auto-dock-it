@@ -3,7 +3,7 @@ import re
 import shutil
 from pathlib import Path
 
-RUN_ID_RE = re.compile(r"^\d{8}-\d{6}$")
+RUN_ID_RE = re.compile(r"^\d{8}-\d{6}(?:-[0-9a-f]+)?$")
 
 
 def prune_old_runs(output_root: Path, keep: int) -> list[Path]:

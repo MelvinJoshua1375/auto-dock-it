@@ -256,7 +256,7 @@ def _render_containerize(provider_choice: str, user_key: str, docker_bin: str, p
         clean = _strip_ansi(line.rstrip())
         log_lines.append(clean)
         log_area.code("\n".join(log_lines[-60:]), language="text")
-        match = re.search(r"output/(\d{8}-\d{6})", clean)
+        match = re.search(r"output/(\d{8}-\d{6}(?:-[0-9a-f]+)?)", clean)
         if match:
             last_run_dir = OUTPUT_ROOT / match.group(1)
     rc = proc.wait()

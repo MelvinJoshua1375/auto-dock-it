@@ -114,7 +114,7 @@ def list_runs(
     if not output_dir.exists():
         console.print(f"[yellow]No runs found in {output_dir}.[/yellow]")
         return
-    run_re = _re.compile(r"^\d{8}-\d{6}$")
+    run_re = _re.compile(r"^\d{8}-\d{6}(?:-[0-9a-f]+)?$")
     runs = sorted(
         (p for p in output_dir.iterdir() if p.is_dir() and run_re.match(p.name)),
         key=lambda p: p.name, reverse=True,
