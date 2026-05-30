@@ -19,5 +19,9 @@ Rules:
 - Do NOT use `pip install --user`; install to the system site-packages so the resulting binaries are on the standard PATH for any USER.
 - If you create a non-root user, install dependencies BEFORE switching to that user.
 - If you reference a user with `USER`, make sure that user actually exists in the base image (eg `node:20-slim` already has `node`; `python:*-slim` does not, you must create one).
+- For Python apps: set `ENV PYTHONUNBUFFERED=1` and `ENV PYTHONDONTWRITEBYTECODE=1` so logs flush and bytecode files don't pollute the image.
+- For Node apps with a build step: use multi-stage build (a `builder` stage with full deps, then a runtime stage with `--omit=dev` or production-only deps).
+- Always combine `apt-get update`, `apt-get install`, and `rm -rf /var/lib/apt/lists/*` in one `RUN` to keep image layers small.
+- Pin the major version of the base image tag (eg `python:3.12-slim`, `node:20-alpine`) but do not pin patch versions unless the profile says so.
 
 Return only the Dockerfile.

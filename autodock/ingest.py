@@ -1,9 +1,9 @@
-from pathlib import Path
+import contextlib
 import shutil
 import tempfile
+from pathlib import Path
 
 from git import Repo
-
 
 MAX_REPO_SIZE_MB = 200
 
@@ -33,8 +33,6 @@ def _dir_size_mb(path: Path) -> float:
     total = 0
     for p in path.rglob("*"):
         if p.is_file():
-            try:
+            with contextlib.suppress(OSError):
                 total += p.stat().st_size
-            except OSError:
-                pass
     return total / (1024 * 1024)

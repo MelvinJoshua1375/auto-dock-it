@@ -1,6 +1,6 @@
-from dataclasses import dataclass
 import socket
 import time
+from dataclasses import dataclass
 
 import requests
 from rich.console import Console

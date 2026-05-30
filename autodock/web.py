@@ -4,15 +4,18 @@ Two entry paths:
     streamlit run autodock/web.py        (local)
     streamlit run streamlit_app.py       (Streamlit Cloud, calls render())
 """
-from pathlib import Path
 import os
 import re
 import shlex
 import subprocess
 import sys
+import time
+from pathlib import Path
+from urllib.parse import urlparse
 
 import streamlit as st
 
+from .rate_limit import check_and_record
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_ROOT = PROJECT_ROOT / "output"
@@ -48,6 +51,24 @@ def _secrets_into_env(env: dict) -> None:
         pass
 
 
+def _valid_github_url(url: str) -> bool:
+    try:
+        p = urlparse(url)
+    except ValueError:
+        return False
+    if p.scheme not in ("http", "https"):
+        return False
+    if p.hostname not in ("github.com", "www.github.com"):
+        return False
+    parts = [s for s in p.path.split("/") if s]
+    if len(parts) < 2:
+        return False
+    owner, repo = parts[0], parts[1].removesuffix(".git")
+    if not owner.replace("-", "").replace("_", "").isalnum():
+        return False
+    return repo.replace("-", "").replace("_", "").replace(".", "").isalnum()
+
+
 def render() -> None:
     st.set_page_config(page_title="Auto-Dock It", page_icon="🐳", layout="wide")
     st.title("Auto-Dock It")
@@ -78,6 +99,25 @@ def render() -> None:
 
     if not go:
         return
+
+    if not _valid_github_url(repo_url):
+        st.error("Please paste a valid `https://github.com/<owner>/<repo>` URL.")
+        return
+
+    if "session_runs" not in st.session_state:
+        st.session_state.session_runs = 0
+        st.session_state.last_run_at = None
+
+    decision = check_and_record(
+        session_runs=st.session_state.session_runs,
+        session_last_run_at=st.session_state.last_run_at,
+    )
+    if not decision.allowed:
+        st.warning(decision.reason)
+        return
+
+    st.session_state.session_runs += 1
+    st.session_state.last_run_at = time.monotonic()
 
     log_area = st.empty()
     status_container = st.status("Running pipeline...", expanded=True)

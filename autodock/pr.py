@@ -1,15 +1,14 @@
 """Open a pull request back to the upstream repo with the generated Dockerfile."""
-from dataclasses import dataclass
-from pathlib import Path
-from urllib.parse import urlparse
 import json
 import shlex
 import shutil
 import subprocess
 import tempfile
+from dataclasses import dataclass
+from pathlib import Path
+from urllib.parse import urlparse
 
 from rich.console import Console
-
 
 GIT_FILES = ["Dockerfile", "autodock.yaml", "docker-compose.yml"]
 BRANCH_NAME = "autodock/add-dockerfile"

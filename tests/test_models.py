@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from autodock.models import RepoProfile, ServiceDep, BuildAttempt, RunResult
+from autodock.models import BuildAttempt, RepoProfile, RunResult, ServiceDep
 
 
 def test_minimal_profile_round_trip():

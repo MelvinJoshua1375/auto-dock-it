@@ -1,6 +1,6 @@
+import os
 from dataclasses import dataclass
 from pathlib import Path
-import os
 
 from dotenv import load_dotenv
 
@@ -17,6 +17,7 @@ class Settings:
     max_build_retries: int
     build_timeout_seconds: int
     docker_bin: str
+    keep_recent_runs: int
 
 
 def load_settings(env_file: Path | None = None) -> Settings:
@@ -46,4 +47,5 @@ def load_settings(env_file: Path | None = None) -> Settings:
         max_build_retries=int(os.environ.get("MAX_BUILD_RETRIES", "4")),
         build_timeout_seconds=int(os.environ.get("BUILD_TIMEOUT_SECONDS", "600")),
         docker_bin=os.environ.get("DOCKER_BIN", "docker"),
+        keep_recent_runs=int(os.environ.get("KEEP_RECENT_RUNS", "20")),
     )

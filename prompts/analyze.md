@@ -23,7 +23,7 @@ Your job: produce a single JSON object that describes how to containerize and ru
 Rules:
 - Pick the smallest reasonable base image (slim, alpine when safe).
 - Prefer the canonical run command from README or manifest. If the repo uses gunicorn or uvicorn, use it.
-- If the repo has a `.env.example`, list those keys in env_vars (names only).
+- For `env_vars`, MERGE three sources: the `Env vars referenced in source code` section above, any `.env.example`/`.env.sample` keys, and any docker-compose env references. Deduplicate, names only, never values.
 - If you see a docker-compose.yml referring to postgres, redis, etc., add them to services.
 - If unsure, set the field to null rather than guessing wildly.
 - Return only the JSON, no commentary.

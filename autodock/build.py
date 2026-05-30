@@ -1,6 +1,6 @@
+import time
 from dataclasses import dataclass
 from pathlib import Path
-import time
 
 from rich.console import Console
 
@@ -9,7 +9,6 @@ from .config import Settings
 from .generate import generate_repair
 from .llm import LLM
 from .models import BuildAttempt, RepoProfile
-
 
 ERROR_TAIL_LINES = 80
 

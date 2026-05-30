@@ -5,7 +5,6 @@ import yaml
 from .llm import LLM
 from .models import RepoProfile
 
-
 PROMPT_DIR = Path(__file__).resolve().parent.parent / "prompts"
 
 

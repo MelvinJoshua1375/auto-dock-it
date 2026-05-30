@@ -1,13 +1,11 @@
 """Tiny on-disk cache for RepoProfile keyed by repo URL + commit SHA."""
-from pathlib import Path
 import hashlib
-import json
 import os
+from pathlib import Path
 
 from git import Repo
 
 from .models import RepoProfile
-
 
 CACHE_ROOT = Path(os.environ.get("AUTODOCK_CACHE_DIR", str(Path.home() / ".cache" / "autodock")))
 

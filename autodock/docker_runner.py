@@ -3,9 +3,9 @@
 DOCKER_BIN can be a single binary ("docker") or a multi-token prefix
 ("flatpak-spawn --host docker"), so we always split it and prepend to argv.
 """
-from dataclasses import dataclass
 import shlex
 import subprocess
+from dataclasses import dataclass
 
 from .config import Settings
 

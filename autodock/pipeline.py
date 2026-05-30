@@ -1,21 +1,17 @@
-from dataclasses import dataclass
-from pathlib import Path
 import json
 import time
-
-
-def _json_str(v: str) -> str:
-    return json.dumps(v)
+from dataclasses import dataclass
+from pathlib import Path
 
 from rich.console import Console
 from rich.panel import Panel
 
-from . import docker_runner
+from . import cache, docker_runner
 from .analyze import analyze
 from .build import build_with_repair
-from .config import Settings
-from . import cache
+from .cleanup import prune_old_runs
 from .compose_runner import validate_compose
+from .config import Settings
 from .generate import generate_autodock_config, generate_compose, generate_dockerfile, generate_runtime_repair
 from .ingest import clone_repo
 from .llm import LLM
@@ -40,11 +36,15 @@ def run_pipeline(
     console: Console | None = None,
 ) -> PipelineResult:
     console = console or Console()
+    output_root.mkdir(parents=True, exist_ok=True)
+    pruned = prune_old_runs(output_root, keep=settings.keep_recent_runs)
+    if pruned:
+        console.print(f"[dim]Pruned {len(pruned)} old run(s) from {output_root}[/dim]")
     run_id = time.strftime("%Y%m%d-%H%M%S")
     run_dir = output_root / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "metadata.json").write_text(
-        '{"run_id": "%s", "repo_url": %s}' % (run_id, _json_str(repo_url))
+        json.dumps({"run_id": run_id, "repo_url": repo_url})
     )
     llm = LLM(settings)
 

@@ -1,6 +1,6 @@
 import pytest
 
-from autodock.pr import _parse_upstream, PrError
+from autodock.pr import PrError, _parse_upstream
 
 
 @pytest.mark.parametrize("url,expected", [
