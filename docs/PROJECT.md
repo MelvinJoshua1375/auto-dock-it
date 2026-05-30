@@ -58,7 +58,7 @@ This is the difference between "asked an LLM for a Dockerfile" and "built and ve
 - A Python CLI (`autodock`) that runs the full pipeline locally.
 - A Streamlit web UI that exposes the same pipeline through a browser.
 - A VS Code extension that calls the CLI from the editor.
-- Eight demo runs committed with full attempt history so the agentic loop is provable.
+- Nine demo runs committed with full attempt history so the agentic loop is provable.
 - Documentation, security guards, tests, CI, and a deploy story for Fly.io and Streamlit Cloud.
 
 ---
@@ -231,10 +231,10 @@ Single-container path:
 
 Compose path:
 1. Writes the LLM-generated `docker-compose.yml` to the repo directory.
-2. Runs `docker compose -p autodock up -d --build` (the explicit `-p` avoids invalid image refs when the temp dir name contains characters compose dislikes).
+2. Runs `docker compose -p autodock-<uuid8> up -d --build` (the project name carries an 8-char UUID suffix so concurrent runs do not tear down each other's stacks; the explicit `-p` also avoids invalid image refs when the temp dir name contains characters compose dislikes).
 3. Uses `docker compose port app <container_port>` to discover the actual published host port, not relying on the user-picked random port.
 4. Polls that host port the same way.
-5. Tears down the stack with `docker compose -p autodock down -v` in `finally`.
+5. Tears down the stack with `docker compose -p <run-specific project> down -v` in `finally`.
 
 ### Runtime-repair loop
 
@@ -608,10 +608,11 @@ The Streamlit UI used to write the visitor's BYOK key into `os.environ` to influ
 
 ## 12. Demo evidence
 
-Eight runs committed to `demos/`. Each contains the full attempt history, the final Dockerfile, the structured profile, validation result, and token usage. These are the receipts.
+Nine runs committed to `demos/`. Each contains the full attempt history, the final Dockerfile, the structured profile, validation result, and token usage. These are the receipts.
 
 | Demo | Stack | Build attempts | Outcome |
 |---|---|---|---|
+| `jenkins-demo` | Flask web app from a real user repo; bind port mismatch (8501 inside vs EXPOSE 8000) | 1 build + 2 repairs (1 nested) | HTTP 200; outer loop `sed`-patched the bind port, inner loop fixed `USER` ordering |
 | `flask` | Python + Flask + gunicorn | 2 (1 build repair) | HTTP 200 |
 | `nodejs` | Node + Express | 2 (1 build repair) | HTTP 200 |
 | `broken-flask` | Flask with a deliberate `flsk` typo in requirements | 4 (3 build repairs) | HTTP 200; LLM `sed`-patched the typo at build time |
@@ -621,13 +622,13 @@ Eight runs committed to `demos/`. Each contains the full attempt history, the fi
 | `crashing-route-flask` | Flask route reads a hard-coded `/etc/...` path not in the repo | 1 | HTTP 200; LLM read app.py, added `RUN mkdir && touch` to Dockerfile |
 | `runtime-loop-fired` | Flask route calls `pandoc` via `subprocess`, hidden in a sub-package | 1 build + 1 runtime-repair | HTTP 200; first validation returned 500 from `FileNotFoundError`; **runtime-repair loop** read logs, added `RUN apt-get install -y pandoc` |
 
-The eighth demo is the only one where the runtime-repair loop has fired in committed evidence. The other seven cases were caught at build time.
+`runtime-loop-fired` and `jenkins-demo` are the two demos where the runtime-repair loop has fired in committed evidence. `jenkins-demo` is the only one that also shows the inner build-failure loop firing inside a runtime repair. The other seven cases were caught at build time.
 
 ---
 
 ## 13. Testing
 
-82 tests under `tests/`. Run with `pytest -q` (4-5 seconds). Coverage of every non-LLM module.
+~101 tests under `tests/` (counts vary slightly with parametrize cases). Run with `pytest -q` (4-5 seconds). Coverage of every non-LLM module.
 
 | Test file | What it covers |
 |---|---|
@@ -646,7 +647,7 @@ The eighth demo is the only one where the runtime-repair loop has fired in commi
 | `test_security_dockerfile_scan.py` | Dangerous-pattern scanner (the NF1 belt-and-suspenders) |
 | `test_settings_overrides.py` | Per-request settings without env mutation (the NF2 fix) |
 
-LLM-driven stages are intentionally not unit tested. They are exercised by the eight demo runs which serve as integration evidence.
+LLM-driven stages are intentionally not unit tested. They are exercised by the nine demo runs which serve as integration evidence.
 
 Lint: `ruff check autodock tests` clean.
 Security scan: `bandit -r autodock -ll` clean.

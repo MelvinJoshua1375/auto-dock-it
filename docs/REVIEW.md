@@ -1,5 +1,7 @@
 # Auto-Dock It Repository Review
 
+> **Status: historical artifact.** This was the first external review (2026-05-30, grade A-) and is kept here as a record of the project's evolution. All findings below have been addressed in commits `f5d4d72`..`d0337c7`. See **Resolution Status** at the end of each section. A second review followed and triggered another round of fixes; see the project history for the latest state.
+
 ## Executive Summary
 
 Auto-Dock It is a strong implementation of the original agentic AI problem statement. The repository goes beyond simple Dockerfile generation by adding an LLM-driven analyze/generate/build/validate loop, build repair, runtime repair, audit artifacts, a CLI, a Streamlit UI, PR generation, demos, tests, CI, and a meaningful security model.
@@ -57,6 +59,8 @@ if 200 <= r.status_code < 400:
 
 This matters because validation is central to the project's claim that Auto-Dock It produces working Docker setups, not just plausible Dockerfiles.
 
+**Resolution:** Fixed in `f5d4d72`. Both `validate.py` and `compose_runner.py` now require `200 <= status < 400` and tests assert the new range.
+
 ### High: Concurrent Runs Can Collide
 
 Several identifiers are based only on the current second or are globally fixed:
@@ -80,6 +84,8 @@ Recommended fix:
 - Derive image tags, container names, and Compose project names from the unique run ID.
 - Pass the run-specific Compose project name into `validate_compose()`.
 
+**Resolution:** Fixed in `f5d4d72`. `run_id` now has a 6-char UUID suffix and the Compose project name a separate 8-char suffix, both threaded through `validate_compose()` and `validate_container()`. A follow-up review caught that the run-ID regex in `cli.py`, `cleanup.py`, and `web.py` had not been updated to recognize the new suffixed format; that was fixed in a later commit and `tests/test_cleanup.py` now covers both formats.
+
 ### Medium: Docker Command Errors Are Not Normalized
 
 `docker_runner.run()` directly calls `subprocess.run()`. If Docker is missing or a command times out, exceptions such as `FileNotFoundError` and `subprocess.TimeoutExpired` can bubble out instead of being represented as a controlled `CommandResult`.
@@ -91,6 +97,8 @@ Relevant file:
 Recommended fix:
 
 Catch expected subprocess failures and return a non-zero `CommandResult` with a useful stderr message. This would let the pipeline save failed attempts consistently and return a clean `PipelineResult`.
+
+**Resolution:** Fixed in `f5d4d72`. `docker_runner.run` now catches `FileNotFoundError` (exit 127), `subprocess.TimeoutExpired` (exit 124), and generic `OSError` (exit 1) and returns a normalized `CommandResult`.
 
 ### Medium: URL Policy And Documentation Disagree
 
@@ -104,6 +112,8 @@ Relevant files:
 Recommended fix:
 
 Prefer enforcing HTTPS in the CLI unless there is a deliberate reason to support plain HTTP.
+
+**Resolution:** Fixed in `f5d4d72`. `_validate_repo_url` rejects `http://` URLs and `tests/test_url_validation.py` moved the HTTP example into the rejection set.
 
 ### Low: Documentation Has Stale Claims
 
@@ -120,6 +130,8 @@ Recommended fix:
 
 Run `pytest --collect-only -q` in the intended development environment, then update all docs from one source of truth.
 
+**Resolution:** Fixed in `1ef31b6`. README and `docs/PROJECT.md` both now report the same test count (~101 after later additions), both say no commit-making automation is configured, and both reflect the actual `.env.example` defaults. PROJECT.md was refreshed again after the second review to update the demo count to nine.
+
 ### Low: Open-Source Requirement Needs Clarification
 
 The initial problem statement says only open-source tools should be used. The project is MIT-licensed and uses open-source Python packages, but Gemini and Groq are hosted model services.
@@ -131,6 +143,8 @@ Add a short note explaining the distinction:
 - The Auto-Dock It codebase is open source.
 - The current LLM providers are hosted APIs.
 - A future Ollama/local backend would provide a fully local open-model path.
+
+**Resolution:** Fixed in `1ef31b6`. README now has an "Open-source scope" paragraph that distinguishes the MIT-licensed codebase from the hosted LLM providers and names Ollama as the roadmap item for a fully-local backend.
 
 ## Working Tree Hygiene
 
