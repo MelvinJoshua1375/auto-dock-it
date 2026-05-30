@@ -1,15 +1,17 @@
 {
   "name": "Auto-Dock It",
-  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.11-bookworm",
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "version": "latest",
       "moby": true
     }
   },
-  "postCreateCommand": "pip install -e '.[dev,ui]'",
+  "onCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "bash .devcontainer/welcome.sh",
   "remoteEnv": {
-    "DOCKER_BIN": "docker"
+    "DOCKER_BIN": "docker",
+    "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin"
   },
   "customizations": {
     "vscode": {
@@ -23,7 +25,17 @@
   "portsAttributes": {
     "8501": {
       "label": "Streamlit UI",
-      "onAutoForward": "openBrowser"
+      "onAutoForward": "silent"
+    }
+  },
+  "secrets": {
+    "GEMINI_API_KEY": {
+      "description": "Free Gemini API key from https://aistudio.google.com/apikey. Required to run `autodock`.",
+      "documentationUrl": "https://aistudio.google.com/apikey"
+    },
+    "GROQ_API_KEY": {
+      "description": "Optional Groq API key from https://console.groq.com/keys. Use if you set LLM_PROVIDER=groq.",
+      "documentationUrl": "https://console.groq.com/keys"
     }
   }
 }
