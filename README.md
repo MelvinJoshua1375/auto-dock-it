@@ -106,6 +106,8 @@ Set `LLM_PROVIDER` in `.env`:
 
 The LLM layer handles 429 backoff using the provider's `retry-after` hint, applies a 60-second per-request timeout, and retries once on transient failures.
 
+**Open-source scope.** The Auto-Dock It codebase is MIT licensed and depends only on open-source Python packages (`google-generativeai`, `groq`, `gitpython`, `pydantic`, `typer`, `rich`, `streamlit`). Gemini and Groq themselves are hosted proprietary model services accessed via free-tier API keys you supply (BYOK). A fully-local backend through Ollama is on the roadmap and would replace the hosted-model dependency for users who require an end-to-end open stack.
+
 ## CLI
 
 ```
@@ -183,11 +185,11 @@ Reference PR: https://github.com/MelvinJoshua1375/autodock-pr-test/pull/1.
 ```bash
 pip install -e ".[dev,ui]"
 ruff check autodock tests           # lint
-pytest -q                           # 48 tests, ~5s
+pytest -q                           # 82 tests (parametrized), ~5s
 pytest -q --cov=autodock            # with coverage
 ```
 
-CI runs ruff, pytest across Python 3.10 - 3.13, and a Bandit security scan on every push. Dependabot watches pip and GitHub Actions versions weekly.
+CI runs ruff, pytest across Python 3.10 - 3.13, and a Bandit security scan on every push. No commit-making automation (Dependabot, pre-commit.ci, release-please) is configured; dependency bumps are reviewed manually.
 
 ## Security notes
 
