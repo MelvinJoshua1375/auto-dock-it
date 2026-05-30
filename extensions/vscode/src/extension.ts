@@ -6,10 +6,10 @@ function autodockBin(): string {
   return cfg.get<string>("binPath") ?? "autodock";
 }
 
-function runAutodock(args: string[], title: string): Promise<void> {
+function runAutodock(args: string[], title: string): Thenable<void> {
   return vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title, cancellable: true },
-    (progress, token) =>
+    (_progress, token) =>
       new Promise<void>((resolve, reject) => {
         const out = vscode.window.createOutputChannel("Auto-Dock It");
         out.show(true);
@@ -20,7 +20,11 @@ function runAutodock(args: string[], title: string): Promise<void> {
         proc.stderr.on("data", (b) => out.append(b.toString()));
         proc.on("exit", (code) => {
           out.appendLine(`\nexit ${code}`);
-          code === 0 ? resolve() : reject(new Error(`autodock exited ${code}`));
+          if (code === 0) {
+            resolve();
+          } else {
+            reject(new Error(`autodock exited ${code}`));
+          }
         });
       })
   );
