@@ -42,6 +42,90 @@ def assert_safe_dockerfile(dockerfile: str) -> None:
                 raise UnsafeDockerfileError(pattern=m.group(0), line=line.strip())
 
 
+# Compose-level dangers: things that grant a container access to the host or
+# the Docker daemon itself. Scanned against every generated docker-compose.yml
+# before `docker compose up` is invoked.
+_DANGEROUS_HOST_MOUNTS = (
+    "/var/run/docker.sock",
+    "/proc",
+    "/sys",
+    "/etc",
+    "/root",
+    "/home",
+    "/var/lib/docker",
+)
+_DANGEROUS_CAPS = {"sys_admin", "all", "net_admin", "sys_ptrace", "sys_module"}
+_ALLOWED_NETWORK_MODES = {"bridge", "none", "default"}
+
+
+class UnsafeComposeError(RuntimeError):
+    def __init__(self, reason: str, service: str | None = None):
+        msg = f"refused: docker-compose.yml unsafe: {reason}"
+        if service:
+            msg += f" (service: {service})"
+        super().__init__(msg)
+        self.reason = reason
+        self.service = service
+
+
+def assert_safe_compose(compose_yaml: str) -> None:
+    """Raise if the LLM-generated compose file grants a service host or daemon access.
+
+    Checks each service in `services:` for: privileged true, host bind mounts to
+    sensitive paths (docker.sock, /proc, /sys, /etc, /root, /home, /var/lib/docker),
+    cap_add of dangerous capabilities, network_mode: host, pid: host, ipc: host,
+    userns_mode: host, security_opt with apparmor/selinux disable, and devices that
+    expose /dev/* directly.
+    """
+    try:
+        data = yaml.safe_load(compose_yaml)
+    except yaml.YAMLError as exc:
+        raise UnsafeComposeError(f"compose YAML did not parse: {exc}") from exc
+    if not isinstance(data, dict):
+        raise UnsafeComposeError("compose YAML did not produce a mapping")
+    services = data.get("services") or {}
+    if not isinstance(services, dict):
+        raise UnsafeComposeError("services block is not a mapping")
+
+    for name, svc in services.items():
+        if not isinstance(svc, dict):
+            continue
+        if svc.get("privileged") is True:
+            raise UnsafeComposeError("privileged: true is not allowed", service=name)
+        if svc.get("network_mode") and str(svc["network_mode"]).lower() not in _ALLOWED_NETWORK_MODES:
+            raise UnsafeComposeError(f"network_mode {svc['network_mode']!r} is not allowed", service=name)
+        if str(svc.get("pid", "")).lower() == "host":
+            raise UnsafeComposeError("pid: host is not allowed", service=name)
+        if str(svc.get("ipc", "")).lower() == "host":
+            raise UnsafeComposeError("ipc: host is not allowed", service=name)
+        if str(svc.get("userns_mode", "")).lower() == "host":
+            raise UnsafeComposeError("userns_mode: host is not allowed", service=name)
+        caps = svc.get("cap_add") or []
+        if isinstance(caps, list):
+            for cap in caps:
+                if str(cap).lower().lstrip("cap_") in _DANGEROUS_CAPS:
+                    raise UnsafeComposeError(f"cap_add {cap!r} is not allowed", service=name)
+        sec_opts = svc.get("security_opt") or []
+        if isinstance(sec_opts, list):
+            for opt in sec_opts:
+                low = str(opt).lower().replace(" ", "")
+                if "apparmor:unconfined" in low or "seccomp:unconfined" in low or "label=disable" in low:
+                    raise UnsafeComposeError(f"security_opt {opt!r} is not allowed", service=name)
+        for vol in svc.get("volumes") or []:
+            spec = vol if isinstance(vol, str) else (vol.get("source") if isinstance(vol, dict) else "")
+            host_path = str(spec).split(":", 1)[0].strip()
+            if not host_path or not host_path.startswith("/"):
+                continue
+            for bad in _DANGEROUS_HOST_MOUNTS:
+                if host_path == bad or host_path.startswith(bad.rstrip("/") + "/"):
+                    raise UnsafeComposeError(f"host bind mount {host_path!r} is not allowed", service=name)
+        for dev in svc.get("devices") or []:
+            spec = dev if isinstance(dev, str) else (dev.get("source") if isinstance(dev, dict) else "")
+            host_dev = str(spec).split(":", 1)[0].strip()
+            if host_dev.startswith("/dev/"):
+                raise UnsafeComposeError(f"device passthrough {host_dev!r} is not allowed", service=name)
+
+
 def generate_dockerfile(profile: RepoProfile, llm: LLM) -> str:
     template = (PROMPT_DIR / "dockerfile.md").read_text()
     prompt = template.replace("{profile}", profile.model_dump_json(indent=2))
@@ -88,7 +172,9 @@ def generate_compose(profile: RepoProfile, dockerfile: str, llm: LLM) -> str:
         .replace("{dockerfile}", dockerfile)
     )
     raw = llm.complete_text(prompt)
-    return _strip_fences(raw)
+    compose = _strip_fences(raw)
+    assert_safe_compose(compose)
+    return compose
 
 
 def generate_explanation(dockerfile: str, llm: LLM) -> str:
