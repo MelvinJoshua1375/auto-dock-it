@@ -1,0 +1,25 @@
+FROM python:3.9-slim
+
+RUN groupadd -r app && useradd -r -g app app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+USER app
+
+EXPOSE 8000
+
+CMD ["python", "app.py"]
+
+HEALTHCHECK CMD curl -f http://localhost:8000/ || exit 1
+
+ENV APP_COLOR=blue 
+RUN sed -i 's/8501/8000/g' app.py

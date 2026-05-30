@@ -68,12 +68,19 @@ Watch attempts 0 → 1 → ... land under `output/<run_id>/attempts/`, then a fi
 
 **Option B — Read the captured runs in [`demos/`](demos/).** Each folder is a real pipeline run with every attempted Dockerfile, the build error that triggered the LLM repair, and the final `validation.txt`. Start with [`demos/runtime-loop-fired/`](demos/runtime-loop-fired/) where the agent installed `pandoc` after reading a `FileNotFoundError` from container logs, or [`demos/broken-flask/`](demos/broken-flask/) where it `sed`-patched a typo in `requirements.txt` at build time.
 
+## Live agentic run on a fresh user repo
+
+Below is a real end-to-end run on [`MelvinJoshua1375/jenkins-demo`](https://github.com/MelvinJoshua1375/jenkins-demo), executed inside a GitHub Codespace with Groq as the LLM. Two self-healing loops fired: an outer one when the built container did not actually serve traffic on the exposed port, and an inner one when the LLM's first repair attempt itself failed at build time. Full artifacts in [`demos/jenkins-demo/`](demos/jenkins-demo/).
+
+![End-to-end run on jenkins-demo](demos/jenkins-demo/run.png)
+
 ## Demos
 
-Eight runs captured in [`demos/`](demos/) with full attempt logs and per-run usage stats.
+Nine runs captured in [`demos/`](demos/) with full attempt logs and per-run usage stats.
 
 | Demo | Stack | Attempts | Outcome |
 |---|---|---|---|
+| [`demos/jenkins-demo`](demos/jenkins-demo/) | Flask web app from a real user repo; bind port mismatch (8501 inside vs EXPOSE 8000) | 1 build + 2 repairs (1 nested) | HTTP 200; outer loop patched `sed 8501->8000`, inner loop fixed `USER` ordering |
 | [`demos/flask`](demos/flask/) | Python + Flask + gunicorn | 2 (1 build repair) | HTTP 200 |
 | [`demos/nodejs`](demos/nodejs/) | Node + Express | 2 (1 build repair) | HTTP 200 |
 | [`demos/broken-flask`](demos/broken-flask/) | Flask with `flsk` typo in requirements.txt | 4 (3 build repairs) | HTTP 200, LLM `sed`-patched the typo at build time |

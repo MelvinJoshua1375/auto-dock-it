@@ -1,0 +1,22 @@
+ok=True
+detail=HTTP 200 from http://127.0.0.1:33587/
+
+logs:
+This is a sample web application that displays a colored background. 
+ A color can be specified in two ways. 
+
+ 1. As a command line argument with --color as the argument. Accepts one of red,green,blue,pink,darkblue,saffron,plum,verdigris,oxblood,periwinkle,charcoal,celadon,amaranth,glaucous,mikado_yellow,payne_grey,falu_red,zaffre 
+ 2. As an Environment variable APP_COLOR. Accepts one of red,green,blue,pink,darkblue,saffron,plum,verdigris,oxblood,periwinkle,charcoal,celadon,amaranth,glaucous,mikado_yellow,payne_grey,falu_red,zaffre 
+ 3. If none of the above then a random color is picked from the above list. 
+ Note: Command line argument precedes over environment variable.
+
+
+No Command line argument. Color from environment variable =blue
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8000
+ * Running on http://172.17.0.2:8000
+[33mPress CTRL+C to quit[0m
+172.17.0.1 - - [30/May/2026 22:58:28] "GET / HTTP/1.1" 200 -
