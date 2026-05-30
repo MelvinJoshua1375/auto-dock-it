@@ -21,6 +21,18 @@ OUTPUT_ROOT = PROJECT_ROOT / "output"
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*[mGKHF]")
 
 
+def _docker_available(docker_bin: str) -> bool:
+    try:
+        import shlex
+        out = subprocess.run(
+            shlex.split(docker_bin) + ["version", "--format", "{{.Server.Version}}"],
+            capture_output=True, text=True, timeout=5,
+        )
+        return out.returncode == 0
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return False
+
+
 def _strip_ansi(text: str) -> str:
     return ANSI_RE.sub("", text)
 
@@ -41,6 +53,14 @@ with st.sidebar:
         "Switch provider by changing `LLM_PROVIDER=gemini|groq` there."
     )
 
+preview_mode = not _docker_available(docker_bin)
+if preview_mode:
+    st.info(
+        "**Preview mode**: Docker is not reachable from this environment. "
+        "The pipeline will run ingest + analyze + generate only (no build, no validate). "
+        "To get the full self-healing flow, clone the repo and run `autodock run <url>` locally."
+    )
+
 repo_url = st.text_input("GitHub repository URL", placeholder="https://github.com/user/repo")
 go = st.button("Containerize", type="primary", disabled=not repo_url)
 
@@ -50,7 +70,16 @@ if go:
     log_lines: list[str] = []
 
     env = {**os.environ, "DOCKER_BIN": docker_bin}
+    # Pull Streamlit Cloud secrets into env if present
+    try:
+        for key in ("GROQ_API_KEY", "GEMINI_API_KEY", "LLM_PROVIDER"):
+            if key in st.secrets and key not in env:
+                env[key] = str(st.secrets[key])
+    except Exception:
+        pass
     cmd = [sys.executable, "-m", "autodock.cli", "run", repo_url]
+    if preview_mode:
+        cmd.append("--dry-run")
     proc = subprocess.Popen(
         cmd, cwd=str(PROJECT_ROOT), env=env,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1,

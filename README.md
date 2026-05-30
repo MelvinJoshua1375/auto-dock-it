@@ -91,6 +91,17 @@ streamlit run autodock/web.py
 
 Opens at http://localhost:8501. Paste a repo URL, click Containerize, watch the agentic loop run.
 
+### Deploying to Streamlit Community Cloud
+
+The web UI runs on https://share.streamlit.io for free with one caveat: Streamlit Cloud containers do not have Docker, so the deployed app falls back to **preview mode** (ingest + analyze + generate Dockerfile only). Build / validate / PR need a local Docker daemon.
+
+To deploy:
+
+1. Push this repo to your GitHub (public). The entry point `streamlit_app.py` is already at the root.
+2. Visit https://share.streamlit.io, sign in with GitHub, click **New app**, select this repo, branch `main`, file `streamlit_app.py`.
+3. Open the app's **Settings → Secrets** and paste the contents of [`.streamlit/secrets.toml.example`](.streamlit/secrets.toml.example) filled with your real keys.
+4. Deploy. The first build takes 2-3 minutes while pip resolves dependencies.
+
 ## Pipeline stages
 
 1. **Ingest** — shallow clone (depth 1, 200 MB cap).
