@@ -89,11 +89,28 @@ def assert_safe_compose(compose_yaml: str) -> None:
     if not isinstance(services, dict) or not services:
         raise UnsafeComposeError("services block is empty or not a mapping")
 
+    def _is_truthy(v) -> bool:
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            return v.strip().lower() in {"true", "yes", "on", "1"}
+        if isinstance(v, (int, float)):
+            return bool(v)
+        return False
+
+    def _as_list(v):
+        """Compose accepts list OR a single scalar for list-typed fields. Normalize."""
+        if v is None:
+            return []
+        if isinstance(v, list):
+            return v
+        return [v]
+
     for name, svc in services.items():
         if not isinstance(svc, dict):
-            continue
-        if svc.get("privileged") is True:
-            raise UnsafeComposeError("privileged: true is not allowed", service=name)
+            raise UnsafeComposeError("service definition is not a mapping", service=name)
+        if _is_truthy(svc.get("privileged")):
+            raise UnsafeComposeError(f"privileged: {svc['privileged']!r} is not allowed", service=name)
         if svc.get("network_mode") and str(svc["network_mode"]).lower() not in _ALLOWED_NETWORK_MODES:
             raise UnsafeComposeError(f"network_mode {svc['network_mode']!r} is not allowed", service=name)
         if str(svc.get("pid", "")).lower() == "host":
@@ -102,30 +119,32 @@ def assert_safe_compose(compose_yaml: str) -> None:
             raise UnsafeComposeError("ipc: host is not allowed", service=name)
         if str(svc.get("userns_mode", "")).lower() == "host":
             raise UnsafeComposeError("userns_mode: host is not allowed", service=name)
-        caps = svc.get("cap_add") or []
-        if isinstance(caps, list):
-            for cap in caps:
-                low = str(cap).lower()
-                if low.startswith("cap_"):
-                    low = low[4:]
-                if low in _DANGEROUS_CAPS:
-                    raise UnsafeComposeError(f"cap_add {cap!r} is not allowed", service=name)
-        sec_opts = svc.get("security_opt") or []
-        if isinstance(sec_opts, list):
-            for opt in sec_opts:
-                low = str(opt).lower().replace(" ", "")
-                if "apparmor:unconfined" in low or "seccomp:unconfined" in low or "label=disable" in low:
-                    raise UnsafeComposeError(f"security_opt {opt!r} is not allowed", service=name)
-        for vol in svc.get("volumes") or []:
-            spec = vol if isinstance(vol, str) else (vol.get("source") if isinstance(vol, dict) else "")
+        for cap in _as_list(svc.get("cap_add")):
+            low = str(cap).lower()
+            if low.startswith("cap_"):
+                low = low[4:]
+            if low in _DANGEROUS_CAPS:
+                raise UnsafeComposeError(f"cap_add {cap!r} is not allowed", service=name)
+        for opt in _as_list(svc.get("security_opt")):
+            low = str(opt).lower().replace(" ", "")
+            if "apparmor:unconfined" in low or "seccomp:unconfined" in low or "label=disable" in low:
+                raise UnsafeComposeError(f"security_opt {opt!r} is not allowed", service=name)
+        for vol in _as_list(svc.get("volumes")):
+            if isinstance(vol, dict):
+                spec = vol.get("source") or ""
+            else:
+                spec = vol
             host_path = str(spec).split(":", 1)[0].strip()
             if not host_path or not host_path.startswith("/"):
                 continue
             for bad in _DANGEROUS_HOST_MOUNTS:
                 if host_path == bad or host_path.startswith(bad.rstrip("/") + "/"):
                     raise UnsafeComposeError(f"host bind mount {host_path!r} is not allowed", service=name)
-        for dev in svc.get("devices") or []:
-            spec = dev if isinstance(dev, str) else (dev.get("source") if isinstance(dev, dict) else "")
+        for dev in _as_list(svc.get("devices")):
+            if isinstance(dev, dict):
+                spec = dev.get("source") or ""
+            else:
+                spec = dev
             host_dev = str(spec).split(":", 1)[0].strip()
             if host_dev.startswith("/dev/"):
                 raise UnsafeComposeError(f"device passthrough {host_dev!r} is not allowed", service=name)

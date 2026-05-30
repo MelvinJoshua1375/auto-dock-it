@@ -51,6 +51,26 @@ def test_dangerous_compose_refused(snippet):
         assert_safe_compose(snippet)
 
 
+@pytest.mark.parametrize("snippet", [
+    # privileged as string instead of bool
+    "services:\n  app:\n    build: .\n    privileged: 'true'\n",
+    "services:\n  app:\n    build: .\n    privileged: yes\n",
+    # scalar cap_add (compose allows scalar where list expected; safety must too)
+    "services:\n  app:\n    build: .\n    cap_add: SYS_ADMIN\n",
+    "services:\n  app:\n    build: .\n    cap_add: CAP_SYS_ADMIN\n",
+    # scalar devices
+    "services:\n  app:\n    build: .\n    devices: /dev/kvm:/dev/kvm\n",
+    # scalar volumes
+    "services:\n  app:\n    build: .\n    volumes: /etc:/host-etc\n",
+    "services:\n  app:\n    build: .\n    volumes: /var/run/docker.sock:/var/run/docker.sock\n",
+    # service value not a mapping
+    "services:\n  app: not-a-mapping\n",
+])
+def test_dangerous_scalar_forms_refused(snippet):
+    with pytest.raises(UnsafeComposeError):
+        assert_safe_compose(snippet)
+
+
 def test_invalid_yaml_refused():
     with pytest.raises(UnsafeComposeError):
         assert_safe_compose("services:\n  app:\n    build: .\n    cap_add: [SYS_ADMIN\n")

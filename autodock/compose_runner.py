@@ -38,6 +38,19 @@ def validate_compose(
     host_port = _discover_app_port(settings, repo_dir, profile.exposed_port, project) if profile.exposed_port else None
 
     try:
+        # If the profile declared an exposed port but we cannot find it on the host,
+        # the compose file or app isn't actually publishing it. That's a failure, not
+        # a "stack still up" success: the whole point of validation is to confirm the
+        # app responds on its expected port.
+        if profile.exposed_port and not host_port:
+            logs = _compose_logs(settings, repo_dir, project)
+            return RunResult(
+                ok=False,
+                detail=(f"profile declared port {profile.exposed_port} on service 'app' "
+                        "but `docker compose port app` did not return a host mapping"),
+                container_logs_tail=logs,
+            )
+
         if host_port:
             url = f"http://127.0.0.1:{host_port}/"
             console.print(f"[cyan]app published on host port {host_port}[/cyan]")
@@ -58,10 +71,11 @@ def validate_compose(
             logs = _compose_logs(settings, repo_dir, project)
             return RunResult(ok=False, detail=f"app did not respond: {last_err}", container_logs_tail=logs)
         else:
+            # No port expected (worker / cron / consumer style). Liveness only.
             time.sleep(15)
             ps = docker_runner.run(settings, ["compose", "-p", project, "ps", "-q"], cwd=repo_dir, timeout=10)
             if ps.stdout.strip():
-                return RunResult(ok=True, detail="compose stack still up after 15s",
+                return RunResult(ok=True, detail="no port expected; compose stack still up after 15s",
                                  container_logs_tail=_compose_logs(settings, repo_dir, project))
             return RunResult(ok=False, detail="compose stack went down",
                              container_logs_tail=_compose_logs(settings, repo_dir, project))
