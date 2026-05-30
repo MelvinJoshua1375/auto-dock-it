@@ -36,7 +36,7 @@ markers = ["integration: tests that hit the network or an LLM"]
 autodock = "autodock.cli:app"
 
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=82.0.1"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
