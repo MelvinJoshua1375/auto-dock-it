@@ -1,0 +1,25 @@
+{
+  "language": "python",
+  "framework": "flask",
+  "package_manager": "pip",
+  "install_command": "pip install -r requirements.txt",
+  "build_command": null,
+  "run_command": "gunicorn --bind 0.0.0.0:8000 app:app",
+  "exposed_port": 8000,
+  "env_vars": [
+    "POSTGRES_DB",
+    "POSTGRES_HOST",
+    "POSTGRES_PORT",
+    "POSTGRES_USER",
+    "POSTGRES_PASSWORD"
+  ],
+  "services": [
+    {
+      "name": "Postgres",
+      "image": "postgres:latest",
+      "purpose": "Database"
+    }
+  ],
+  "base_image_hint": "python:3.12-slim",
+  "notes": "Requires a Postgres sidecar"
+}

@@ -1,0 +1,14 @@
+version: 1
+language: python
+framework: flask
+build:
+  command: null
+run:
+  command: gunicorn --bind 0.0.0.0:8000 app:app
+ports:
+- 8000
+env: []
+services: []
+notes: The application is designed to crash at runtime due to a missing file /etc/autodock/lookup.txt.
+  This file will need to be created in the Dockerfile to allow the application to
+  run successfully.

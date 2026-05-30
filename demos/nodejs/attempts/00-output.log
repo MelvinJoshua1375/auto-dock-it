@@ -1,0 +1,37 @@
+Sending build context to Docker daemon  345.1kB
+
+Step 1/11 : FROM node:20-slim
+20-slim: Pulling from library/node
+e54aec64c365: Pulling fs layer
+64cfb949317c: Pulling fs layer
+ff86ea2e5edc: Pulling fs layer
+804d4d68057c: Pulling fs layer
+3c02fd806613: Pulling fs layer
+e54aec64c365: Download complete
+3c02fd806613: Download complete
+64cfb949317c: Download complete
+c25f5f744a13: Download complete
+31633b71bda5: Download complete
+804d4d68057c: Download complete
+ff86ea2e5edc: Download complete
+ff86ea2e5edc: Pull complete
+e54aec64c365: Pull complete
+804d4d68057c: Pull complete
+64cfb949317c: Pull complete
+3c02fd806613: Pull complete
+Digest: sha256:2cf067cfed83d5ea958367df9f966191a942351a2df77d6f0193e162b5febfc0
+Status: Downloaded newer image for node:20-slim
+ ---> 2cf067cfed83
+Step 2/11 : WORKDIR /app
+ ---> Running in 2142206a8b72
+ ---> Removed intermediate container 2142206a8b72
+ ---> 10e1e012530e
+Step 3/11 : RUN groupadd --system node && useradd --system --gid node node
+ ---> Running in 578144eee85e
+[91mgroupadd: group 'node' already exists
+[0m
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+The command '/bin/sh -c groupadd --system node && useradd --system --gid node node' returned a non-zero code: 9

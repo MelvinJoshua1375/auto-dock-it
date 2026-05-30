@@ -1,0 +1,8 @@
+Sending build context to Docker daemon   72.7kB
+
+
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Error response from daemon: failed to parse Dockerfile: ENV must have two arguments

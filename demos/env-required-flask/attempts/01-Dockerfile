@@ -1,0 +1,19 @@
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -ms /bin/bash pythonuser
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+RUN chown -R pythonuser:pythonuser /app
+USER pythonuser
+
+EXPOSE 8000
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
+HEALTHCHECK CMD curl -f http://localhost:8000/ || exit 1
+ENV REQUIRED_SECRET=default_value

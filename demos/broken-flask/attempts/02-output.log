@@ -1,0 +1,42 @@
+Sending build context to Docker daemon  72.19kB
+
+Step 1/13 : FROM python:3.12-slim
+ ---> 090ba77e2958
+Step 2/13 : RUN groupadd -r app && useradd -r -g app app
+ ---> Using cache
+ ---> 540e1a68cfa7
+Step 3/13 : RUN mkdir /app && chown app:app /app
+ ---> Using cache
+ ---> eb8dc016c9dc
+Step 4/13 : WORKDIR /app
+ ---> Using cache
+ ---> c7303528b552
+Step 5/13 : COPY requirements.txt .
+ ---> Using cache
+ ---> 0d1a72ca92b4
+Step 6/13 : RUN pip install --upgrade pip
+ ---> Running in 796b2df461cc
+Requirement already satisfied: pip in /usr/local/lib/python3.12/site-packages (25.0.1)
+Collecting pip
+  Downloading pip-26.1.1-py3-none-any.whl.metadata (4.6 kB)
+Downloading pip-26.1.1-py3-none-any.whl (1.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 6.3 MB/s eta 0:00:00
+Installing collected packages: pip
+  Attempting uninstall: pip
+    Found existing installation: pip 25.0.1
+    Uninstalling pip-25.0.1:
+      Successfully uninstalled pip-25.0.1
+Successfully installed pip-26.1.1
+[91mWARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+[0m ---> Removed intermediate container 796b2df461cc
+ ---> dc9c3a15cc8c
+Step 7/13 : RUN pip install -r requirements.txt
+ ---> Running in 56eb92a61ea6
+[91mERROR: Could not find a version that satisfies the requirement flsk==3.0.0 (from versions: none)
+[0m[91mERROR: No matching distribution found for flsk==3.0.0
+[0m
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+The command '/bin/sh -c pip install -r requirements.txt' returned a non-zero code: 1

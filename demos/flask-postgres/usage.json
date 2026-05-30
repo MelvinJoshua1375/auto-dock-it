@@ -1,0 +1,7 @@
+{
+  "provider": "groq",
+  "calls": 2,
+  "input_tokens": 1468,
+  "output_tokens": 376,
+  "estimated_cost_usd": 0.001163
+}

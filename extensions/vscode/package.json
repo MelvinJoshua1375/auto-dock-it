@@ -1,0 +1,70 @@
+{
+  "name": "auto-dock-it",
+  "displayName": "Auto-Dock It",
+  "description": "Agentic Dockerfile generator with a self-healing build loop. Wraps the autodock CLI.",
+  "version": "0.1.0",
+  "publisher": "melvinjoshua",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MelvinJoshua1375/auto-dock-it.git",
+    "directory": "extensions/vscode"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onCommand:autodock.containerize", "onCommand:autodock.explain"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "autodock.containerize",
+        "title": "Auto-Dock: Containerize this workspace"
+      },
+      {
+        "command": "autodock.explain",
+        "title": "Auto-Dock: Explain this Dockerfile"
+      },
+      {
+        "command": "autodock.improve",
+        "title": "Auto-Dock: Suggest improvements for this Dockerfile"
+      }
+    ],
+    "menus": {
+      "editor/title/context": [
+        {
+          "when": "resourceFilename == Dockerfile",
+          "command": "autodock.explain",
+          "group": "autodock"
+        },
+        {
+          "when": "resourceFilename == Dockerfile",
+          "command": "autodock.improve",
+          "group": "autodock"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Auto-Dock It",
+      "properties": {
+        "autodock.binPath": {
+          "type": "string",
+          "default": "autodock",
+          "description": "Path to the autodock executable."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.0.0",
+    "@vscode/vsce": "^2.20.0"
+  }
+}

@@ -1,0 +1,39 @@
+# Fly.io deployment config for Auto-Dock It with full pipeline support.
+# Replace 'auto-dock-it' with your chosen app name (must be globally unique).
+# Region 'sin' = Singapore, closest to India. Change as needed.
+
+app = "auto-dock-it"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  STREAMLIT_SERVER_PORT = "8501"
+  LLM_PROVIDER = "groq"
+
+[http_service]
+  internal_port = 8501
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/_stcore/health"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 1024
+
+# Required for Docker-in-Docker. Privileged is needed for nested docker build.
+# Fly.io supports privileged mode on paid plans only; on free tier the deployment
+# runs in preview mode automatically because the docker daemon will not start.
+# [experimental]
+#   privileged = true

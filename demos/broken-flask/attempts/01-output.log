@@ -1,0 +1,31 @@
+Sending build context to Docker daemon  72.19kB
+
+Step 1/12 : FROM python:3.12-slim
+ ---> 090ba77e2958
+Step 2/12 : RUN groupadd -r app && useradd -r -g app app
+ ---> Running in 085102b6a5dd
+ ---> Removed intermediate container 085102b6a5dd
+ ---> 540e1a68cfa7
+Step 3/12 : RUN mkdir /app && chown app:app /app
+ ---> Running in d9039d096890
+ ---> Removed intermediate container d9039d096890
+ ---> eb8dc016c9dc
+Step 4/12 : WORKDIR /app
+ ---> Running in 24db08754690
+ ---> Removed intermediate container 24db08754690
+ ---> c7303528b552
+Step 5/12 : COPY requirements.txt .
+ ---> 0d1a72ca92b4
+Step 6/12 : RUN pip install -r requirements.txt
+ ---> Running in e4352dbfc110
+[91mERROR: Could not find a version that satisfies the requirement flsk==3.0.0 (from versions: none)
+[0m[91m
+[notice] A new release of pip is available: 25.0.1 -> 26.1.1
+[notice] To update, run: pip install --upgrade pip
+[0m[91mERROR: No matching distribution found for flsk==3.0.0
+[0m
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+The command '/bin/sh -c pip install -r requirements.txt' returned a non-zero code: 1
