@@ -1,4 +1,7 @@
 {
   "python.terminal.useEnvFile": true,
-  "python.envFile": "${workspaceFolder}/.env"
+  "python.envFile": "${workspaceFolder}/.env",
+  "workbench.editorAssociations": {
+    "*.md": "vscode.markdown.preview.editor"
+  }
 }
