@@ -1,17 +1,15 @@
 """Streamlit web UI for Auto-Dock It.
 
-Run with:
-    streamlit run autodock/web.py
-
-The UI launches the same `autodock run` pipeline as a subprocess so we can
-stream stage output live without re-implementing the pipeline.
+Two entry paths:
+    streamlit run autodock/web.py        (local)
+    streamlit run streamlit_app.py       (Streamlit Cloud, calls render())
 """
 from pathlib import Path
 import os
 import re
+import shlex
 import subprocess
 import sys
-import time
 
 import streamlit as st
 
@@ -21,62 +19,72 @@ OUTPUT_ROOT = PROJECT_ROOT / "output"
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*[mGKHF]")
 
 
+def _strip_ansi(text: str) -> str:
+    return ANSI_RE.sub("", text)
+
+
 def _docker_available(docker_bin: str) -> bool:
     try:
-        import shlex
         out = subprocess.run(
             shlex.split(docker_bin) + ["version", "--format", "{{.Server.Version}}"],
             capture_output=True, text=True, timeout=5,
         )
         return out.returncode == 0
-    except (FileNotFoundError, subprocess.TimeoutExpired):
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
         return False
 
 
-def _strip_ansi(text: str) -> str:
-    return ANSI_RE.sub("", text)
+def _secrets_into_env(env: dict) -> None:
+    """Copy Streamlit Cloud secrets into env if present, else no-op."""
+    try:
+        for key in ("GROQ_API_KEY", "GEMINI_API_KEY", "LLM_PROVIDER"):
+            try:
+                val = st.secrets[key]
+            except (KeyError, FileNotFoundError):
+                continue
+            if val and key not in env:
+                env[key] = str(val)
+    except Exception:
+        pass
 
 
-st.set_page_config(page_title="Auto-Dock It", page_icon="🐳", layout="wide")
-st.title("Auto-Dock It")
-st.caption("Agentic Dockerfile generator with self-healing build loop.")
+def render() -> None:
+    st.set_page_config(page_title="Auto-Dock It", page_icon="🐳", layout="wide")
+    st.title("Auto-Dock It")
+    st.caption("Agentic Dockerfile generator with self-healing build loop.")
 
-with st.sidebar:
-    st.header("Settings")
-    docker_bin = st.text_input(
-        "DOCKER_BIN", value=os.environ.get("DOCKER_BIN", "docker"),
-        help="On a normal terminal leave as 'docker'. Inside VSCode flatpak set to 'flatpak-spawn --host docker'.",
-    )
-    st.markdown("---")
-    st.markdown(
-        "**Tip:** API keys come from your `.env` file. "
-        "Switch provider by changing `LLM_PROVIDER=gemini|groq` there."
-    )
+    with st.sidebar:
+        st.header("Settings")
+        docker_bin = st.text_input(
+            "DOCKER_BIN", value=os.environ.get("DOCKER_BIN", "docker"),
+            help="On a normal terminal leave as 'docker'. Inside VSCode flatpak set to 'flatpak-spawn --host docker'.",
+        )
+        st.markdown("---")
+        st.markdown(
+            "**Tip:** API keys come from your `.env` file locally, "
+            "or from Streamlit Cloud Secrets when deployed."
+        )
 
-preview_mode = not _docker_available(docker_bin)
-if preview_mode:
-    st.info(
-        "**Preview mode**: Docker is not reachable from this environment. "
-        "The pipeline will run ingest + analyze + generate only (no build, no validate). "
-        "To get the full self-healing flow, clone the repo and run `autodock run <url>` locally."
-    )
+    preview_mode = not _docker_available(docker_bin)
+    if preview_mode:
+        st.info(
+            "**Preview mode**: Docker is not reachable from this environment. "
+            "The pipeline will run ingest, analyze, and generate only. "
+            "For the full self-healing flow, clone the repo and run `autodock run <url>` locally."
+        )
 
-repo_url = st.text_input("GitHub repository URL", placeholder="https://github.com/user/repo")
-go = st.button("Containerize", type="primary", disabled=not repo_url)
+    repo_url = st.text_input("GitHub repository URL", placeholder="https://github.com/user/repo")
+    go = st.button("Containerize", type="primary", disabled=not repo_url)
 
-if go:
+    if not go:
+        return
+
     log_area = st.empty()
     status_container = st.status("Running pipeline...", expanded=True)
     log_lines: list[str] = []
 
     env = {**os.environ, "DOCKER_BIN": docker_bin}
-    # Pull Streamlit Cloud secrets into env if present
-    try:
-        for key in ("GROQ_API_KEY", "GEMINI_API_KEY", "LLM_PROVIDER"):
-            if key in st.secrets and key not in env:
-                env[key] = str(st.secrets[key])
-    except Exception:
-        pass
+    _secrets_into_env(env)
     cmd = [sys.executable, "-m", "autodock.cli", "run", repo_url]
     if preview_mode:
         cmd.append("--dry-run")
@@ -135,7 +143,7 @@ if go:
         if attempts_dir.exists():
             with st.expander(f"Agentic build attempts ({len(list(attempts_dir.glob('*-Dockerfile')))})"):
                 for df in sorted(attempts_dir.glob("*-Dockerfile")):
-                    st.markdown(f"**Attempt {df.stem.split('-')[0]}** — `{df.name}`")
+                    st.markdown(f"**Attempt {df.stem.split('-')[0]}**: `{df.name}`")
                     st.code(df.read_text(), language="dockerfile")
                     log = df.with_name(df.name.replace("Dockerfile", "output.log"))
                     if log.exists():
@@ -148,3 +156,12 @@ if go:
                 st.code(validation_path.read_text(), language="text")
 
         st.caption(f"All artifacts: `{last_run_dir}`")
+
+
+if __name__ == "__main__":
+    render()
+else:
+    # Allow `streamlit run autodock/web.py` (script context, __name__ == "__main__")
+    # AND `from autodock.web import render` from streamlit_app.py.
+    # When imported, do nothing at module load; the caller calls render().
+    pass

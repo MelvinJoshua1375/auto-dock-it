@@ -1,2 +1,4 @@
-"""Streamlit Cloud entry point. Just imports the real app."""
-from autodock import web  # noqa: F401
+"""Streamlit Cloud entry point."""
+from autodock.web import render
+
+render()
