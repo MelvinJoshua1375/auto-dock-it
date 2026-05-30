@@ -61,7 +61,7 @@ The public Streamlit demo at [auto-dock-it.streamlit.app](https://auto-dock-it.s
 
 ```bash
 export GEMINI_API_KEY=your_key_here   # get a free one at aistudio.google.com
-autodock run https://github.com/MelvinJoshua1375/autodock-pr-test
+autodock run https://github.com/MelvinJoshua1375/githubactions-demo
 ```
 
 Watch attempts 0 → 1 → ... land under `output/<run_id>/attempts/`, then a final HTTP 200 validation.
@@ -194,7 +194,6 @@ autodock pr output/<run_id> --dry-run             # prints what it would do
 
 If the upstream is owned by you, the tool skips the fork and pushes the branch directly.
 
-Reference PR: https://github.com/MelvinJoshua1375/autodock-pr-test/pull/1.
 
 ## Development
 

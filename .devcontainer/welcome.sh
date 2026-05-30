@@ -19,7 +19,7 @@ ${cyan}=====================================================================${re
 
  2. Run the agentic pipeline on a public GitHub repo:
 
-    ${yellow}autodock run https://github.com/MelvinJoshua1375/autodock-pr-test${reset}
+    ${yellow}autodock run https://github.com/MelvinJoshua1375/githubactions-demo${reset}
 
  3. Inspect the captured attempts:
 

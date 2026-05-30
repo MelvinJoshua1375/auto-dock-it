@@ -139,6 +139,5 @@ Worth shipping next, ordered by impact:
 | Try it (preview mode) | https://auto-dock-it.streamlit.app |
 | Code, issues, releases | https://github.com/MelvinJoshua1375/auto-dock-it |
 | Demos with attempt history | https://github.com/MelvinJoshua1375/auto-dock-it/tree/main/demos |
-| Reference PR from `autodock pr` | https://github.com/MelvinJoshua1375/autodock-pr-test/pull/1 |
 | Changelog | https://github.com/MelvinJoshua1375/auto-dock-it/blob/main/CHANGELOG.md |
 | Contributing guide | https://github.com/MelvinJoshua1375/auto-dock-it/blob/main/CONTRIBUTING.md |
