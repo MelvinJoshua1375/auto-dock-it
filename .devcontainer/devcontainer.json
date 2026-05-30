@@ -1,0 +1,29 @@
+{
+  "name": "Auto-Dock It",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true
+    }
+  },
+  "postCreateCommand": "pip install -e '.[dev,ui]'",
+  "remoteEnv": {
+    "DOCKER_BIN": "docker"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff"
+      ]
+    }
+  },
+  "forwardPorts": [8501],
+  "portsAttributes": {
+    "8501": {
+      "label": "Streamlit UI",
+      "onAutoForward": "openBrowser"
+    }
+  }
+}

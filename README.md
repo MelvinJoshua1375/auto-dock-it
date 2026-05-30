@@ -5,6 +5,7 @@
 </p>
 
 [![Live](https://img.shields.io/badge/Live-auto--dock--it.streamlit.app-0db7ed?logo=streamlit&logoColor=white)](https://auto-dock-it.streamlit.app)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/MelvinJoshua1375/auto-dock-it)
 [![CI](https://github.com/MelvinJoshua1375/auto-dock-it/actions/workflows/ci.yml/badge.svg)](https://github.com/MelvinJoshua1375/auto-dock-it/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/MelvinJoshua1375/auto-dock-it/branch/main/graph/badge.svg)](https://codecov.io/gh/MelvinJoshua1375/auto-dock-it)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -51,6 +52,21 @@ Five stages, each writes to disk so the run is reproducible and auditable:
 3. **Generate**: Dockerfile from the profile. If `services` is non-empty, also generates `docker-compose.yml`.
 4. **Build (self-healing)**: `docker build`; on failure, LLM repair, retry up to `MAX_BUILD_RETRIES` (default 4).
 5. **Validate**: runs the container or compose stack, polls the app port for HTTP 2xx/3xx. On failure, up to 2 runtime-repair cycles feeding container logs back.
+
+## See the agentic loop without installing anything
+
+The public Streamlit demo at [auto-dock-it.streamlit.app](https://auto-dock-it.streamlit.app) runs **preview mode** (ingest + analyze + generate) because the Streamlit Cloud sandbox has no Docker daemon. The differentiator, the self-healing build and runtime-repair loop, lives in stages 4 and 5 and needs a real Docker daemon. Two ways to see it without a local install:
+
+**Option A — Open in GitHub Codespaces (~60 seconds, free 60 hrs/month per GitHub account).** Click the Codespaces badge at the top of this README. The `.devcontainer/` config preinstalls Python, Docker-in-Docker, and `pip install -e .[dev,ui]`. Once the IDE loads, in the terminal:
+
+```bash
+export GEMINI_API_KEY=your_key_here   # get a free one at aistudio.google.com
+autodock run https://github.com/MelvinJoshua1375/autodock-pr-test
+```
+
+Watch attempts 0 → 1 → ... land under `output/<run_id>/attempts/`, then a final HTTP 200 validation.
+
+**Option B — Read the captured runs in [`demos/`](demos/).** Each folder is a real pipeline run with every attempted Dockerfile, the build error that triggered the LLM repair, and the final `validation.txt`. Start with [`demos/runtime-loop-fired/`](demos/runtime-loop-fired/) where the agent installed `pandoc` after reading a `FileNotFoundError` from container logs, or [`demos/broken-flask/`](demos/broken-flask/) where it `sed`-patched a typo in `requirements.txt` at build time.
 
 ## Demos
 
