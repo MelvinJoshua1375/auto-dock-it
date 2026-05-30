@@ -23,6 +23,17 @@ log "Install Auto-Dock It (editable, dev + ui extras)"
 python3 -m pip install -e '.[dev,ui]'
 ok "package installed"
 
+log "Ensure user-local bin is on PATH for every shell"
+USER_BIN="$(python3 -c 'import site, os; print(os.path.join(site.getuserbase(), "bin"))')"
+for rc in "$HOME/.bashrc" "$HOME/.profile" "$HOME/.zshrc"; do
+  [ -f "$rc" ] || continue
+  if ! grep -q "PATH=$USER_BIN" "$rc"; then
+    printf '\nexport PATH="%s:$PATH"\n' "$USER_BIN" >> "$rc"
+  fi
+done
+export PATH="$USER_BIN:$PATH"
+ok "PATH updated ($USER_BIN)"
+
 log "Verify autodock entrypoint"
 if ! command -v autodock >/dev/null 2>&1; then
   warn "autodock not on PATH; trying user-local install location"
