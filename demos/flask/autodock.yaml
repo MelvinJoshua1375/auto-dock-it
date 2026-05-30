@@ -1,0 +1,14 @@
+version: 1
+language: python
+framework: flask
+build:
+  command: null
+run:
+  command: gunicorn --worker-tmp-dir /dev/shm --config gunicorn_config.py app:app
+ports:
+- 8080
+env: []
+services: []
+notes: The application is a Flask app served by Gunicorn. The run command includes
+  `--worker-tmp-dir /dev/shm` which is often used for performance in containerized
+  environments. The project is explicitly noted as a sample for DigitalOcean App Platform.

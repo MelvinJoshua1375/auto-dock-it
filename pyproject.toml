@@ -1,0 +1,30 @@
+[project]
+name = "autodock"
+version = "0.1.0"
+description = "Agentic LLM tool that clones a GitHub repo and generates a working Docker setup"
+requires-python = ">=3.10"
+dependencies = [
+    "google-genai>=1.0.0",
+    "groq>=0.11.0",
+    "gitpython>=3.1.40",
+    "pydantic>=2.5.0",
+    "typer>=0.12.0",
+    "rich>=13.7.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0", "pytest-mock>=3.12.0"]
+ui = ["streamlit>=1.30.0"]
+
+[project.scripts]
+autodock = "autodock.cli:app"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["autodock*"]

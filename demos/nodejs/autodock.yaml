@@ -1,0 +1,15 @@
+version: 1
+language: javascript
+framework: express
+build:
+  command: null
+run:
+  command: npm start
+ports:
+- 5006
+env:
+- PORT
+services: []
+notes: The application handles `PORT` environment variable and includes a SIGTERM
+  handler for graceful shutdowns, as well as `keepAliveTimeout` configuration suitable
+  for Heroku-like environments.

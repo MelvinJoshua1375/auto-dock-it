@@ -1,0 +1,9 @@
+ok=True
+detail=HTTP 200 from http://127.0.0.1:55359/
+
+logs:
+> start
+> node index.js
+
+Listening on 5006
+Rendering 'pages/index' for route '/'

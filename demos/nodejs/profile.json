@@ -1,0 +1,15 @@
+{
+  "language": "javascript",
+  "framework": "express",
+  "package_manager": "npm",
+  "install_command": "npm install",
+  "build_command": null,
+  "run_command": "npm start",
+  "exposed_port": 5006,
+  "env_vars": [
+    "PORT"
+  ],
+  "services": [],
+  "base_image_hint": "node:20-slim",
+  "notes": "The application handles `PORT` environment variable and includes a SIGTERM handler for graceful shutdowns, as well as `keepAliveTimeout` configuration suitable for Heroku-like environments."
+}

@@ -1,0 +1,87 @@
+Sending build context to Docker daemon  72.19kB
+
+Step 1/14 : FROM python:3.12-slim
+ ---> 090ba77e2958
+Step 2/14 : RUN groupadd -r app && useradd -r -g app app
+ ---> Using cache
+ ---> 540e1a68cfa7
+Step 3/14 : RUN mkdir /app && chown app:app /app
+ ---> Using cache
+ ---> eb8dc016c9dc
+Step 4/14 : WORKDIR /app
+ ---> Using cache
+ ---> c7303528b552
+Step 5/14 : COPY requirements.txt .
+ ---> Using cache
+ ---> 0d1a72ca92b4
+Step 6/14 : RUN pip install --upgrade pip
+ ---> Using cache
+ ---> dc9c3a15cc8c
+Step 7/14 : RUN sed -i 's/flsk/flask/g' requirements.txt
+ ---> Running in 326d4bf2d120
+ ---> Removed intermediate container 326d4bf2d120
+ ---> 9f668551b63f
+Step 8/14 : RUN pip install -r requirements.txt
+ ---> Running in 7b38faa6a20d
+Collecting flask==3.0.0 (from -r requirements.txt (line 1))
+  Downloading flask-3.0.0-py3-none-any.whl.metadata (3.6 kB)
+Collecting gunicorn==23.0.0 (from -r requirements.txt (line 2))
+  Downloading gunicorn-23.0.0-py3-none-any.whl.metadata (4.4 kB)
+Collecting Werkzeug>=3.0.0 (from flask==3.0.0->-r requirements.txt (line 1))
+  Downloading werkzeug-3.1.8-py3-none-any.whl.metadata (4.0 kB)
+Collecting Jinja2>=3.1.2 (from flask==3.0.0->-r requirements.txt (line 1))
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting itsdangerous>=2.1.2 (from flask==3.0.0->-r requirements.txt (line 1))
+  Downloading itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+Collecting click>=8.1.3 (from flask==3.0.0->-r requirements.txt (line 1))
+  Downloading click-8.4.1-py3-none-any.whl.metadata (2.6 kB)
+Collecting blinker>=1.6.2 (from flask==3.0.0->-r requirements.txt (line 1))
+  Downloading blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+Collecting packaging (from gunicorn==23.0.0->-r requirements.txt (line 2))
+  Downloading packaging-26.2-py3-none-any.whl.metadata (3.5 kB)
+Collecting MarkupSafe>=2.0 (from Jinja2>=3.1.2->flask==3.0.0->-r requirements.txt (line 1))
+  Downloading markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Downloading flask-3.0.0-py3-none-any.whl (99 kB)
+Downloading gunicorn-23.0.0-py3-none-any.whl (85 kB)
+Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+Downloading click-8.4.1-py3-none-any.whl (116 kB)
+Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+Downloading markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Downloading werkzeug-3.1.8-py3-none-any.whl (226 kB)
+Downloading packaging-26.2-py3-none-any.whl (100 kB)
+Installing collected packages: packaging, MarkupSafe, itsdangerous, click, blinker, Werkzeug, Jinja2, gunicorn, flask
+
+Successfully installed Jinja2-3.1.6 MarkupSafe-3.0.3 Werkzeug-3.1.8 blinker-1.9.0 click-8.4.1 flask-3.0.0 gunicorn-23.0.0 itsdangerous-2.2.0 packaging-26.2
+[91mWARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+[0m ---> Removed intermediate container 7b38faa6a20d
+ ---> 12761fccf021
+Step 9/14 : COPY . .
+ ---> b82ae6fa3245
+Step 10/14 : RUN chown -R app:app /app
+ ---> Running in ca02d9873b2e
+ ---> Removed intermediate container ca02d9873b2e
+ ---> 0e0a44b18ba3
+Step 11/14 : USER app
+ ---> Running in 657e1fea35ba
+ ---> Removed intermediate container 657e1fea35ba
+ ---> 5c6094eff9b0
+Step 12/14 : EXPOSE 8000
+ ---> Running in 2caec5957080
+ ---> Removed intermediate container 2caec5957080
+ ---> d26d8aa347dc
+Step 13/14 : CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
+ ---> Running in 476d0e46ae6b
+ ---> Removed intermediate container 476d0e46ae6b
+ ---> ff35cc674c28
+Step 14/14 : HEALTHCHECK CMD curl -f http://localhost:8000/ || exit 1
+ ---> Running in 2eec9bbb56d3
+ ---> Removed intermediate container 2eec9bbb56d3
+ ---> 20b0a88fd463
+Successfully built 20b0a88fd463
+Successfully tagged autodock-20260530-030244:latest
+
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+

@@ -1,0 +1,41 @@
+Sending build context to Docker daemon  72.19kB
+
+Step 1/10 : FROM python:3.12-slim
+ ---> 090ba77e2958
+Step 2/10 : RUN groupadd -r app && useradd -r -g app app
+ ---> Using cache
+ ---> 540e1a68cfa7
+Step 3/10 : WORKDIR /app
+ ---> Using cache
+ ---> b65215f91217
+Step 4/10 : COPY requirements.txt .
+ ---> Using cache
+ ---> 4c818f752fac
+Step 5/10 : RUN pip install -r requirements.txt
+ ---> Using cache
+ ---> 9c24114cde73
+Step 6/10 : COPY . .
+ ---> dff2f8e99e43
+Step 7/10 : EXPOSE 8000
+ ---> Running in 1d2273db48bc
+ ---> Removed intermediate container 1d2273db48bc
+ ---> 99c8f44460ba
+Step 8/10 : USER app
+ ---> Running in 8d92157d7d5d
+ ---> Removed intermediate container 8d92157d7d5d
+ ---> 8a98c34cc3b6
+Step 9/10 : CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
+ ---> Running in 5dbcf14420b9
+ ---> Removed intermediate container 5dbcf14420b9
+ ---> 5e832011bba6
+Step 10/10 : HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD curl -f http://localhost:8000/ || exit 1
+ ---> Running in 9a80cffc2f5d
+ ---> Removed intermediate container 9a80cffc2f5d
+ ---> 8008c07ee491
+Successfully built 8008c07ee491
+Successfully tagged autodock-20260530-034210:latest
+
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+

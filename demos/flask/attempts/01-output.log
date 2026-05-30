@@ -1,0 +1,45 @@
+Sending build context to Docker daemon  100.9kB
+
+Step 1/11 : FROM python:3.12-slim
+ ---> 090ba77e2958
+Step 2/11 : WORKDIR /app
+ ---> Using cache
+ ---> 88c41fde55cf
+Step 3/11 : RUN apt-get update     && apt-get install -y --no-install-recommends curl     && rm -rf /var/lib/apt/lists/*
+ ---> Using cache
+ ---> dcf27db15396
+Step 4/11 : COPY requirements.txt .
+ ---> Using cache
+ ---> ff1a24ec81c5
+Step 5/11 : RUN pip install -r requirements.txt
+ ---> Using cache
+ ---> bbdc5125f39f
+Step 6/11 : COPY . .
+ ---> 5829d2dba0d6
+Step 7/11 : RUN addgroup --system appuser     && adduser --system --no-create-home --ingroup appuser appuser     && chown -R appuser:appuser /app
+ ---> Running in e4042d9a5306
+ ---> Removed intermediate container e4042d9a5306
+ ---> 00c1ca66be91
+Step 8/11 : USER appuser
+ ---> Running in 9f6036122a71
+ ---> Removed intermediate container 9f6036122a71
+ ---> 9b8f289e2c6d
+Step 9/11 : EXPOSE 8080
+ ---> Running in caa26b86f94d
+ ---> Removed intermediate container caa26b86f94d
+ ---> 022ed6b617b4
+Step 10/11 : HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3     CMD curl -f http://localhost:8080/ || exit 1
+ ---> Running in 1cf530629166
+ ---> Removed intermediate container 1cf530629166
+ ---> ffde8552909a
+Step 11/11 : CMD ["gunicorn", "--worker-tmp-dir", "/dev/shm", "--config", "gunicorn_config.py", "app:app"]
+ ---> Running in 08f55bb465b8
+ ---> Removed intermediate container 08f55bb465b8
+ ---> 2ef2731f51ba
+Successfully built 2ef2731f51ba
+Successfully tagged autodock-20260530-023800:latest
+
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+

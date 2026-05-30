@@ -1,0 +1,15 @@
+version: 1
+language: python
+framework: flask
+build:
+  command: null
+run:
+  command: gunicorn --bind 0.0.0.0:8000 app:app
+ports:
+- 8000
+env: []
+services:
+- name: redis
+  image: redis:alpine
+  purpose: in-memory data store
+notes: Needs a Redis container
