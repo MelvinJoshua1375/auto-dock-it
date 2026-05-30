@@ -43,9 +43,13 @@ def build_with_repair(
         console.print(f"[cyan]Build attempt {i}[/cyan] tag={image_tag}")
 
         start = time.monotonic()
+        build_args = ["build", "-t", image_tag]
+        if settings.build_no_network:
+            build_args += ["--network=none"]
+        build_args += ["."]
         result = docker_runner.run(
             settings,
-            ["build", "-t", image_tag, "."],
+            build_args,
             cwd=str(repo_dir),
             timeout=settings.build_timeout_seconds,
             capture=True,

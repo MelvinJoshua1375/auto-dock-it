@@ -5,6 +5,25 @@ from pathlib import Path
 from .llm import LLM
 from .models import RepoProfile
 
+
+def _safe_inside(repo_dir: Path, p: Path) -> bool:
+    """True iff p is a regular file (not a symlink) and resolves under repo_dir.
+
+    Defends analyze against a malicious repo that supplies a symlink named like
+    a manifest (eg `requirements.txt`) pointing at a sensitive host file such as
+    `~/.ssh/id_rsa`. Without this guard, the symlink target would be read into
+    the LLM prompt and exfiltrated to the model provider.
+    """
+    try:
+        if p.is_symlink():
+            return False
+        resolved = p.resolve(strict=True)
+        repo_resolved = repo_dir.resolve(strict=True)
+    except OSError:
+        return False
+    return resolved == repo_resolved or repo_resolved in resolved.parents
+
+
 MANIFEST_FILES = {
     "package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml",
     "requirements.txt", "requirements-dev.txt", "pyproject.toml", "Pipfile", "Pipfile.lock", "setup.py",
@@ -51,6 +70,8 @@ def detect_env_vars(repo_dir: Path) -> list[str]:
         if not p.is_file() or p.suffix not in SOURCE_EXTS:
             continue
         if ".git" in p.parts or "node_modules" in p.parts or ".venv" in p.parts:
+            continue
+        if not _safe_inside(repo_dir, p):
             continue
         try:
             text = p.read_text(encoding="utf-8", errors="replace")[:50_000]
@@ -110,12 +131,15 @@ def build_snapshot(repo_dir: Path) -> str:
     for p in sorted(repo_dir.rglob("*")):
         if ".git" in p.parts or not p.is_file():
             continue
-        if p.name in MANIFEST_FILES:
-            rel = p.relative_to(repo_dir).as_posix()
-            lines.append(f"\n### {rel}")
-            lines.append("```")
-            lines.append(_read_capped(p, MAX_MANIFEST_BYTES))
-            lines.append("```")
+        if p.name not in MANIFEST_FILES:
+            continue
+        if not _safe_inside(repo_dir, p):
+            continue
+        rel = p.relative_to(repo_dir).as_posix()
+        lines.append(f"\n### {rel}")
+        lines.append("```")
+        lines.append(_read_capped(p, MAX_MANIFEST_BYTES))
+        lines.append("```")
 
     return "\n".join(lines)
 
@@ -130,7 +154,7 @@ def analyze(repo_dir: Path, llm: LLM) -> RepoProfile:
 def _find_first(repo_dir: Path, names: list[str]) -> Path | None:
     for name in names:
         candidate = repo_dir / name
-        if candidate.is_file():
+        if candidate.is_file() and _safe_inside(repo_dir, candidate):
             return candidate
     return None
 

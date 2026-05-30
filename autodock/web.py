@@ -139,13 +139,18 @@ def render() -> None:
 
 
 def _build_llm(provider: str, user_key: str):
-    """Construct an LLM with overridden env when the user supplies a key."""
+    """Construct an LLM scoped to this request. Never mutates os.environ.
+
+    Multi-user safe: each Streamlit run constructs its own Settings instead
+    of writing the visitor's key into the process-wide environment, which
+    could otherwise leak across concurrent sessions.
+    """
     from .config import load_settings
     from .llm import LLM
+    overrides: dict = {"LLM_PROVIDER": provider}
     if user_key.strip():
-        os.environ[f"{provider.upper()}_API_KEY"] = user_key.strip()
-        os.environ["LLM_PROVIDER"] = provider
-    settings = load_settings()
+        overrides[f"{provider.upper()}_API_KEY"] = user_key.strip()
+    settings = load_settings(overrides=overrides)
     return LLM(settings)
 
 
