@@ -1,5 +1,7 @@
 # Auto-Dock It
 
+Live preview: **https://auto-dock-it.streamlit.app**
+
 Agentic LLM tool that clones a public GitHub repository, figures out its stack, generates a Dockerfile (and `docker-compose.yml` when external services are needed), builds it with a self-healing loop, and validates that the container actually runs.
 
 ## What's different vs Nixpacks / Buildpacks / one-shot LLM demos
