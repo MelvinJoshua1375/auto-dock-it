@@ -16,6 +16,8 @@ from .pr import PrError, open_pr
 def _validate_repo_url(value: str) -> str:
     """Accept GitHub HTTPS URLs OR local paths (for testing)."""
     if value.startswith(("http://", "https://")):
+        if not value.startswith("https://"):
+            raise typer.BadParameter("Only HTTPS GitHub URLs are accepted.")
         p = urlparse(value)
         if p.hostname not in ("github.com", "www.github.com"):
             raise typer.BadParameter("Only github.com URLs are accepted.")
@@ -26,7 +28,7 @@ def _validate_repo_url(value: str) -> str:
     local = _Path(value).expanduser().resolve()
     if local.exists() and local.is_dir():
         return str(local)
-    raise typer.BadParameter("Must be a github.com URL or an existing local git directory.")
+    raise typer.BadParameter("Must be an https://github.com/<owner>/<repo> URL or an existing local git directory.")
 
 app = typer.Typer(help="Auto-Dock It: agentic Dockerfile generator", add_completion=False)
 console = Console()

@@ -29,9 +29,11 @@ def validate_container(
     settings: Settings,
     console: Console | None = None,
     startup_seconds: int = 30,
+    run_id: str | None = None,
 ) -> RunResult:
     console = console or Console()
-    container_name = f"autodock-test-{int(time.time())}"
+    suffix = run_id or f"{int(time.time())}"
+    container_name = f"autodock-test-{suffix}"
     args = ["run", "-d", "--rm", "--name", container_name]
     host_port = None
     if profile.exposed_port:
@@ -52,7 +54,7 @@ def validate_container(
             while time.monotonic() < deadline:
                 try:
                     r = requests.get(url, timeout=2)
-                    if r.status_code < 500:
+                    if 200 <= r.status_code < 400:
                         logs = _logs_tail(settings, container_name)
                         return RunResult(
                             ok=True,

@@ -1,5 +1,6 @@
 import json
 import time
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -40,7 +41,8 @@ def run_pipeline(
     pruned = prune_old_runs(output_root, keep=settings.keep_recent_runs)
     if pruned:
         console.print(f"[dim]Pruned {len(pruned)} old run(s) from {output_root}[/dim]")
-    run_id = time.strftime("%Y%m%d-%H%M%S")
+    run_id = f"{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
+    compose_project = f"autodock-{uuid.uuid4().hex[:8]}"
     run_dir = output_root / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "metadata.json").write_text(
@@ -103,10 +105,12 @@ def run_pipeline(
     if use_compose and compose_yaml:
         (repo_dir / "docker-compose.yml").write_text(compose_yaml)
         result = validate_compose(repo_dir=str(repo_dir), profile=profile,
-                                  settings=settings, console=console)
+                                  settings=settings, console=console,
+                                  project=compose_project)
     else:
         result = validate_container(image_tag=image_tag, profile=profile,
-                                    settings=settings, console=console)
+                                    settings=settings, console=console,
+                                    run_id=run_id)
 
     current_dockerfile = outcome.final_dockerfile
     max_runtime_repairs = 2
@@ -136,10 +140,12 @@ def run_pipeline(
         (run_dir / "Dockerfile").write_text(current_dockerfile)
         if use_compose and compose_yaml:
             result = validate_compose(repo_dir=str(repo_dir), profile=profile,
-                                      settings=settings, console=console)
+                                      settings=settings, console=console,
+                                      project=compose_project)
         else:
             result = validate_container(image_tag=image_tag, profile=profile,
-                                        settings=settings, console=console)
+                                        settings=settings, console=console,
+                                        run_id=run_id)
 
     (run_dir / "validation.txt").write_text(
         f"ok={result.ok}\ndetail={result.detail}\n\nlogs:\n{result.container_logs_tail}\n"
