@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Agentic LLM tool that clones a GitHub repo and generates a working Docker setup"
 requires-python = ">=3.10"
 dependencies = [
-    "google-genai>=1.0.0",
+    "google-genai>=2.7.0",
     "groq>=0.11.0",
     "gitpython>=3.1.40",
     "pydantic>=2.5.0",
