@@ -1,0 +1,132 @@
+Sending build context to Docker daemon  75.78kB
+
+Step 1/13 : FROM python:3.12-slim
+ ---> 090ba77e2958
+Step 2/13 : ENV PYTHONUNBUFFERED=1
+ ---> Using cache
+ ---> 5a2d4e33e41d
+Step 3/13 : ENV PYTHONDONTWRITEBYTECODE=1
+ ---> Using cache
+ ---> e56f3200bae2
+Step 4/13 : RUN groupadd -r app && useradd -r -g app app
+ ---> Using cache
+ ---> 2620d9202b6c
+Step 5/13 : WORKDIR /app
+ ---> Using cache
+ ---> a7dcf576343e
+Step 6/13 : COPY requirements.txt .
+ ---> Using cache
+ ---> eeea283f501b
+Step 7/13 : RUN pip install -r requirements.txt
+ ---> Using cache
+ ---> c2e719436bb2
+Step 8/13 : RUN apt-get update && apt-get install -y pandoc
+ ---> Running in 40f59dee3229
+Hit:1 http://deb.debian.org/debian trixie InRelease
+Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9671 kB]
+Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [5412 B]
+Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [176 kB]
+Fetched 9943 kB in 9s (1138 kB/s)
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  liblua5.4-0 libnuma1 libyaml-0-2 pandoc-data
+Suggested packages:
+  texlive-latex-recommended texlive-xetex texlive-luatex pandoc-citeproc
+  texlive-latex-extra context wkhtmltopdf librsvg2-bin groff ghc nodejs php
+  perl python ruby r-base-core libjs-mathjax libjs-katex
+  citation-style-language-styles
+The following NEW packages will be installed:
+  liblua5.4-0 libnuma1 libyaml-0-2 pandoc pandoc-data
+0 upgraded, 5 newly installed, 0 to remove and 0 not upgraded.
+Need to get 27.1 MB of archives.
+After this operation, 200 MB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian trixie/main amd64 liblua5.4-0 amd64 5.4.7-1+b2 [147 kB]
+Get:2 http://deb.debian.org/debian trixie/main amd64 libnuma1 amd64 2.0.19-1 [22.2 kB]
+Get:3 http://deb.debian.org/debian trixie/main amd64 libyaml-0-2 amd64 0.2.5-2 [52.5 kB]
+Get:4 http://deb.debian.org/debian trixie/main amd64 pandoc-data all 3.1.11.1-3 [459 kB]
+Get:5 http://deb.debian.org/debian trixie/main amd64 pandoc amd64 3.1.11.1+ds-2 [26.4 MB]
+[91mdebconf: unable to initialize frontend: Dialog
+debconf: (TERM is not set, so the dialog frontend is not usable.)
+debconf: falling back to frontend: Readline
+[0m[91mdebconf: unable to initialize frontend: Readline
+debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/x86_64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8, <STDIN> line 5.)
+debconf: falling back to frontend: Teletype
+[0m[91mdebconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+[0mFetched 27.1 MB in 7s (4060 kB/s)
+Selecting previously unselected package liblua5.4-0:amd64.
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 5645 files and directories currently installed.)
+Preparing to unpack .../liblua5.4-0_5.4.7-1+b2_amd64.deb ...
+Unpacking liblua5.4-0:amd64 (5.4.7-1+b2) ...
+Selecting previously unselected package libnuma1:amd64.
+Preparing to unpack .../libnuma1_2.0.19-1_amd64.deb ...
+Unpacking libnuma1:amd64 (2.0.19-1) ...
+Selecting previously unselected package libyaml-0-2:amd64.
+Preparing to unpack .../libyaml-0-2_0.2.5-2_amd64.deb ...
+Unpacking libyaml-0-2:amd64 (0.2.5-2) ...
+Selecting previously unselected package pandoc-data.
+Preparing to unpack .../pandoc-data_3.1.11.1-3_all.deb ...
+Unpacking pandoc-data (3.1.11.1-3) ...
+Selecting previously unselected package pandoc.
+Preparing to unpack .../pandoc_3.1.11.1+ds-2_amd64.deb ...
+Unpacking pandoc (3.1.11.1+ds-2) ...
+Setting up libyaml-0-2:amd64 (0.2.5-2) ...
+Setting up libnuma1:amd64 (2.0.19-1) ...
+Setting up liblua5.4-0:amd64 (5.4.7-1+b2) ...
+Setting up pandoc-data (3.1.11.1-3) ...
+Setting up pandoc (3.1.11.1+ds-2) ...
+Processing triggers for libc-bin (2.41-12+deb13u3) ...
+ ---> Removed intermediate container 40f59dee3229
+ ---> b6ac52af8c83
+Step 9/13 : COPY . .
+ ---> 11ec4737d1cb
+Step 10/13 : EXPOSE 8000
+ ---> Running in dcc25af2892b
+ ---> Removed intermediate container dcc25af2892b
+ ---> ba9e6423f805
+Step 11/13 : USER app
+ ---> Running in 9572f007a30d
+ ---> Removed intermediate container 9572f007a30d
+ ---> 8bb7b82b3917
+Step 12/13 : CMD ["gunicorn", "--bind", "0.0.0.0:8000", "myapp.server:app"]
+ ---> Running in 90f5aff1e41f
+ ---> Removed intermediate container 90f5aff1e41f
+ ---> 09de1c25b83e
+Step 13/13 : HEALTHCHECK --interval=10s --timeout=5s --retries=3   CMD curl -f http://localhost:8000/ || exit 1
+ ---> Running in 265ee638c18b
+ ---> Removed intermediate container 265ee638c18b
+ ---> fb34345ee0f3
+Successfully built fb34345ee0f3
+Successfully tagged autodock-20260530-215823:latest
+
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+

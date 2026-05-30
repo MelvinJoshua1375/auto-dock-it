@@ -1,0 +1,8 @@
+ok=True
+detail=HTTP 200 from http://127.0.0.1:53433/
+
+logs:
+[2026-05-30 16:34:01 +0000] [1] [INFO] Starting gunicorn 23.0.0
+[2026-05-30 16:34:01 +0000] [1] [INFO] Listening at: http://0.0.0.0:8000 (1)
+[2026-05-30 16:34:01 +0000] [1] [INFO] Using worker: sync
+[2026-05-30 16:34:01 +0000] [7] [INFO] Booting worker with pid: 7

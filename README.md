@@ -54,7 +54,7 @@ Five stages, each writes to disk so the run is reproducible and auditable:
 
 ## Demos
 
-Seven runs captured in [`demos/`](demos/) with full attempt logs and per-run usage stats.
+Eight runs captured in [`demos/`](demos/) with full attempt logs and per-run usage stats.
 
 | Demo | Stack | Attempts | Outcome |
 |---|---|---|---|
@@ -65,6 +65,7 @@ Seven runs captured in [`demos/`](demos/) with full attempt logs and per-run usa
 | [`demos/flask-postgres`](demos/flask-postgres/) | Flask + Postgres multi-service with `psycopg` | 1 | HTTP 200, compose file with `postgres:16` sidecar, env vars routed both as `DATABASE_URL` and discrete `POSTGRES_*` |
 | [`demos/env-required-flask`](demos/env-required-flask/) | Flask that hard-requires an env var the manifests never mention | 2 (1 build repair) | HTTP 200, source-code env grep detected `REQUIRED_SECRET` and the LLM added it as `ENV` |
 | [`demos/crashing-route-flask`](demos/crashing-route-flask/) | Flask whose route reads a hard-coded `/etc/...` path not in the repo | 1 | HTTP 200, LLM read `app.py`, spotted the path, added `RUN mkdir -p /etc/autodock && touch /etc/autodock/lookup.txt` to the Dockerfile |
+| [`demos/runtime-loop-fired`](demos/runtime-loop-fired/) | Flask whose route shells out to `pandoc` via `subprocess`, hidden from the analyze step in a sub-package | 1 build + 1 runtime-repair | HTTP 200. Build succeeded; first validation returned 500 because the container could not find `pandoc`. The **runtime-repair loop** read the `FileNotFoundError` from container logs and added `RUN apt-get install -y pandoc`. Second validation passed. |
 
 ### What the loop actually fixed
 

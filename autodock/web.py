@@ -72,7 +72,8 @@ def _valid_github_url(url: str) -> bool:
 
 def render() -> None:
     logo_path = PROJECT_ROOT / "assets" / "logo.svg"
-    page_icon = str(logo_path) if logo_path.exists() else "🐳"
+    favicon_path = PROJECT_ROOT / "assets" / "favicon.svg"
+    page_icon = str(favicon_path) if favicon_path.exists() else (str(logo_path) if logo_path.exists() else "🐳")
     st.set_page_config(
         page_title="Auto-Dock It | Agentic Dockerfile Generator",
         page_icon=page_icon,
