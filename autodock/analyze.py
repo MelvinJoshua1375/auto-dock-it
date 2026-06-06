@@ -146,7 +146,7 @@ def build_snapshot(repo_dir: Path) -> str:
 
 def analyze(repo_dir: Path, llm: LLM) -> RepoProfile:
     snapshot = build_snapshot(repo_dir)
-    template = PROMPT_TEMPLATE_PATH.read_text()
+    template = PROMPT_TEMPLATE_PATH.read_text(encoding="utf-8")
     prompt = template.replace("{snapshot}", snapshot)
     return llm.complete_json(prompt, RepoProfile)
 

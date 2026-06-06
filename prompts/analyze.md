@@ -25,6 +25,8 @@ Your job: produce a single JSON object that describes how to containerize and ru
 Rules:
 - Pick the smallest reasonable base image (slim, alpine when safe).
 - Prefer the canonical run command from README or manifest. If the repo uses gunicorn or uvicorn, use it.
+- The container must be reachable on its published port, so the app has to listen on `0.0.0.0`, not `127.0.0.1`/`localhost`. When the run command takes an explicit bind/host argument, BAKE `0.0.0.0` into `run_command`: gunicorn -> include `--bind 0.0.0.0:<port>`; uvicorn/hypercorn -> include `--host 0.0.0.0 --port <port>`; streamlit -> include `--server.address=0.0.0.0 --server.port=<port>`; the flask dev server -> prefer `flask run` (binding is supplied via env at the Dockerfile stage). Do NOT invent a server the repo does not use.
+- In `notes`, when the framework binds to localhost by default (flask dev server, gradio, streamlit, the Django/Werkzeug dev servers), say so explicitly and name the env var or flag that forces `0.0.0.0` (eg "gradio defaults to 127.0.0.1; set GRADIO_SERVER_NAME=0.0.0.0"). The Dockerfile stage relies on this hint.
 - For `env_vars`, MERGE three sources: the `Env vars referenced in source code` section above, any `.env.example`/`.env.sample` keys, and any docker-compose env references. Deduplicate, names only, never values.
 - If you see a docker-compose.yml referring to postgres, redis, etc., add them to services.
 - If unsure, set the field to null rather than guessing wildly.

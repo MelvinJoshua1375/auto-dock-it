@@ -81,7 +81,7 @@ def explain(
         raise typer.Exit(code=1)
     settings = load_settings()
     llm = LLM(settings)
-    text = generate_explanation(dockerfile.read_text(), llm)
+    text = generate_explanation(dockerfile.read_text(encoding="utf-8"), llm)
     console.print(text)
 
 
@@ -95,7 +95,7 @@ def improve(
         raise typer.Exit(code=1)
     settings = load_settings()
     llm = LLM(settings)
-    text = generate_improvements(dockerfile.read_text(), llm)
+    text = generate_improvements(dockerfile.read_text(encoding="utf-8"), llm)
     console.print(text)
 
 
@@ -135,12 +135,12 @@ def list_runs(
         meta_path = run / "metadata.json"
         if meta_path.exists():
             with contextlib.suppress(_json.JSONDecodeError):
-                meta = _json.loads(meta_path.read_text())
+                meta = _json.loads(meta_path.read_text(encoding="utf-8"))
         repo = meta.get("repo_url", "?")
         attempts = len(list((run / "attempts").glob("*-Dockerfile"))) if (run / "attempts").exists() else 0
         validation_path = run / "validation.txt"
         if validation_path.exists():
-            text = validation_path.read_text()
+            text = validation_path.read_text(encoding="utf-8")
             ok = "ok=True" in text
             result = "[green]ok[/green]" if ok else "[red]fail[/red]"
             stage = "validate"

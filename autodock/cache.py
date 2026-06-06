@@ -31,7 +31,7 @@ def get(repo_url: str, sha: str) -> RepoProfile | None:
     if not p.exists():
         return None
     try:
-        return RepoProfile.model_validate_json(p.read_text())
+        return RepoProfile.model_validate_json(p.read_text(encoding="utf-8"))
     except Exception:
         return None
 
@@ -39,4 +39,4 @@ def get(repo_url: str, sha: str) -> RepoProfile | None:
 def put(repo_url: str, sha: str, profile: RepoProfile) -> None:
     p = _path(repo_url, sha)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(profile.model_dump_json(indent=2))
+    p.write_text(profile.model_dump_json(indent=2), encoding="utf-8")

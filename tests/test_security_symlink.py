@@ -92,4 +92,6 @@ def test_macro_owner_not_changed(tmp_path: Path):
     (tmp_path / "app.py").write_text('os.environ.get("REAL_VAR")\n')
     (tmp_path / "requirements.txt").write_text("flask\n")
     assert "REAL_VAR" in detect_env_vars(tmp_path)
-    assert os.geteuid() != 0  # documents that tests do not run as root
+    # documents that tests do not run as root (POSIX only; geteuid is absent on Windows)
+    if hasattr(os, "geteuid"):
+        assert os.geteuid() != 0

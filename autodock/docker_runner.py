@@ -30,6 +30,8 @@ def run(settings: Settings, args: list[str], *, cwd: str | None = None,
             cwd=cwd,
             capture_output=capture,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
         )
     except FileNotFoundError as exc:

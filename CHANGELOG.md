@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+### Added
+- New B&W gear + container-stack logo (`assets/logo.svg`, `assets/logo-dark.svg`, `assets/favicon.svg`); replaces the previous coloured Docker-whale mark. Theme-aware: dark mode sidebar uses the white-on-transparent variant.
+- `CODE_OF_CONDUCT.md` (Contributor Covenant v2.1).
+- `SECURITY.md` with vulnerability reporting contacts and known design-decision notes.
+- GitHub issue templates (`bug_report.yml`, `feature_request.yml`, `config.yml`).
+- GitHub pull-request template (`.github/PULL_REQUEST_TEMPLATE.md`).
+- Full README rewrite: logo, structured badges, pipeline table, demo table, full CLI reference, configuration table, contributing guide, roadmap, contact section, and acknowledgements.
+
 ### Security
 - **Symlink path traversal in `analyze.py`**: refuse to read any file that is a symlink or whose resolved path lies outside the cloned repo directory. Previously a malicious public repo could ship a symlink named like a manifest (eg `requirements.txt -> /home/user/.ssh/id_rsa`) and the contents of the symlinked host file would be embedded in the prompt sent to the LLM provider.
 - **Generated-Dockerfile safety scan**: every Dockerfile returned by the LLM is now scanned by `assert_safe_dockerfile()` before being written to disk. Patterns rejected: `curl | sh`, `wget | bash`, `nc -e`, `/dev/tcp/`, hardcoded `ENV *_KEY=`, `ENV *_TOKEN=`, `ENV *_PASSWORD=`, `--privileged`. Defends against prompt-injection that survives the prompt-side guards.

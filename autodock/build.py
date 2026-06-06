@@ -38,8 +38,8 @@ def build_with_repair(
     attempts: list[BuildAttempt] = []
 
     for i in range(settings.max_build_retries + 1):
-        (repo_dir / "Dockerfile").write_text(dockerfile)
-        (attempts_dir / f"{i:02d}-Dockerfile").write_text(dockerfile)
+        (repo_dir / "Dockerfile").write_text(dockerfile, encoding="utf-8")
+        (attempts_dir / f"{i:02d}-Dockerfile").write_text(dockerfile, encoding="utf-8")
         console.print(f"[cyan]Build attempt {i}[/cyan] tag={image_tag}")
 
         start = time.monotonic()
@@ -57,7 +57,7 @@ def build_with_repair(
         duration = time.monotonic() - start
 
         combined = result.stdout + "\n" + result.stderr
-        (attempts_dir / f"{i:02d}-output.log").write_text(combined)
+        (attempts_dir / f"{i:02d}-output.log").write_text(combined, encoding="utf-8")
         error_tail = _tail(combined, ERROR_TAIL_LINES)
 
         attempts.append(BuildAttempt(
