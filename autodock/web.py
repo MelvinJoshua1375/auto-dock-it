@@ -1756,8 +1756,12 @@ def _render_containerize(
         ("Go hello",      "https://github.com/heroku/go-getting-started",           ":material/code:"),
     ]
 
-    if "repo_url_value" not in st.session_state:
-        st.session_state.repo_url_value = ""
+    # The text_input below owns `repo_url_input` once it's rendered, so the sample
+    # buttons must write to that same key (NOT a separate mirror). Streamlit silently
+    # ignores the `value=` kwarg on a keyed widget on subsequent reruns, so writing
+    # to a different key would never propagate into the input.
+    if "repo_url_input" not in st.session_state:
+        st.session_state.repo_url_input = ""
     if "adi_last_result" not in st.session_state:
         st.session_state.adi_last_result = None
 
@@ -1777,11 +1781,11 @@ def _render_containerize(
     sample_cols = st.columns(len(SAMPLE_REPOS))
     for col, (label, url, icon) in zip(sample_cols, SAMPLE_REPOS, strict=True):
         if col.button(label, key=f"sample-{label}", icon=icon, use_container_width=True):
-            st.session_state.repo_url_value = url
+            st.session_state.repo_url_input = url
+            st.rerun()
 
     repo_url = st.text_input(
         "GitHub repository URL",
-        value=st.session_state.repo_url_value,
         placeholder="https://github.com/user/repo",
         key="repo_url_input",
     )
