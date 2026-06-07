@@ -49,8 +49,12 @@ _CSS_VARS_DARK = """
     --adi-surface:      #111111;
     --adi-sidebar:      #0c0c0c;
     --adi-text:         #f5f5f5;
-    --adi-text2:        #9a9a9a;
-    --adi-muted:        #5f5f5f;
+    --adi-text2:        #b5b5b5;
+    /* WCAG AA at small font sizes (12-14 px) requires a contrast ratio of
+       4.5:1. The previous #5f5f5f gave 3.10 on the near-black background
+       and failed the audit; #9a9a9a clears 7:1 while keeping the muted
+       tone the footer needs. */
+    --adi-muted:        #9a9a9a;
     --adi-border:       #1f1f1f;
     --adi-border2:      #2a2a2a;
     --adi-btn-bg:       #161616;
@@ -76,8 +80,12 @@ _CSS_VARS_LIGHT = """
     --adi-surface:      #ffffff;
     --adi-sidebar:      #efefef;
     --adi-text:         #111111;
-    --adi-text2:        #555555;
-    --adi-muted:        #888888;
+    --adi-text2:        #4a4a4a;
+    /* WCAG AA at small font sizes (12-14 px) requires a contrast ratio of
+       4.5:1. The previous #888888 gave 3.34 on the near-white background
+       and failed the audit; #5a5a5a clears 6:1 while keeping the muted
+       tone the footer needs. */
+    --adi-muted:        #5a5a5a;
     --adi-border:       #e8e8e8;
     --adi-border2:      #d0d0d0;
     --adi-btn-bg:       #ffffff;
