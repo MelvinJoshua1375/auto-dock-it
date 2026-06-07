@@ -874,6 +874,12 @@ _CSS_LIGHT_OVERRIDES = """
     font-size: 20px !important;
     line-height: 1 !important;
     display: block !important;
+    /* Material icon glyphs are centered on their text baseline, not their cap
+       height, leaving unused descender slack below the visible drawing.
+       The result is a glyph that sits about 1-2 px above the geometric centre
+       of a flex-centred container. Nudge it down so the visible icon ends up
+       at the optical centre of the round button. */
+    transform: translateY(1px) !important;
   }
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:hover {
     border-color: var(--adi-text2) !important;
