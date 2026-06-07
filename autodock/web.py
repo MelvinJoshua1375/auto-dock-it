@@ -860,23 +860,22 @@ _CSS_LIGHT_OVERRIDES = """
   }
 
   /* ── Theme toggle button (scoped to its key so it does not bleed onto
-     every secondary button in the sidebar). 32x32 round chip that lives
-     on the right edge of the Settings section header. ───────────────── */
+     other secondary buttons). 56x56 round chip on the sidebar top row,
+     balancing the logo on the left. ─────────────────────────────────── */
   [data-testid="stSidebar"] .st-key-adi_theme_btn button {
     background-color: var(--adi-surface) !important;
     color: var(--adi-text) !important;
     border: 1.5px solid var(--adi-border2) !important;
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    min-height: 32px !important;
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
     padding: 0 !important;
     border-radius: 50% !important;
     display: grid !important;
     place-items: center !important;
     line-height: 1 !important;
-    margin-left: auto !important;  /* push it to the right of the column */
-    margin-top: 2px !important;     /* nudge to vertical-centre with the section title */
+    margin-left: auto !important;
     overflow: hidden !important;
   }
   [data-testid="stSidebar"] .st-key-adi_theme_btn button *,
@@ -894,7 +893,7 @@ _CSS_LIGHT_OVERRIDES = """
   [data-testid="stSidebar"] .st-key-adi_theme_btn button .material-symbols-outlined,
   [data-testid="stSidebar"] .st-key-adi_theme_btn button .material-icons,
   [data-testid="stSidebar"] .st-key-adi_theme_btn button svg {
-    font-size: 18px !important;
+    font-size: 32px !important;
     line-height: 1 !important;
     transform: translateY(1px) !important;
   }
@@ -914,9 +913,9 @@ _CSS_LIGHT_OVERRIDES = """
     border-color: var(--adi-text) !important;
   }
   [data-testid="stSidebar"] .st-key-adi_theme_btn .stButton {
-    width: 32px !important;
-    min-width: 32px !important;
-    max-width: 32px !important;
+    width: 56px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
     display: inline-block !important;
     margin-left: auto !important;
   }
@@ -1463,20 +1462,11 @@ def render() -> None:
 
     # ── Sidebar ───────────────────────────────────────────────────────────── #
     with st.sidebar:
-        # Logo gets its own row so the toggle can live inside the Settings
-        # section header below.
-        if logo_path.exists():
-            st.image(str(logo_path), width=44)
-
-        st.markdown("---")
-
-        # Settings section header + theme toggle, side by side. The toggle
-        # sits on the right edge of the section header (Option B layout) so
-        # it stays tightly coupled to the Settings concept and out of the
-        # logo area.
-        _settings_col, _toggle_col = st.columns([5, 1])
-        with _settings_col:
-            _section_header(_icon("settings"), "Settings", "Provider, keys, Docker binary.")
+        # Top row: logo (left) + round theme-toggle button (right).
+        _logo_col, _toggle_col = st.columns([4, 1])
+        with _logo_col:
+            if logo_path.exists():
+                st.image(str(logo_path), width=44)
         with _toggle_col:
             _is_light = st.session_state.get("adi_theme_toggle", False)
             if st.button(
@@ -1486,6 +1476,10 @@ def render() -> None:
             ):
                 st.session_state["adi_theme_toggle"] = not _is_light
                 st.rerun()
+
+        st.markdown("---")
+
+        _section_header(_icon("settings"), "Settings", "Provider, keys, Docker binary.")
 
         provider_choice = st.selectbox(
             "LLM provider",
