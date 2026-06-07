@@ -4,10 +4,10 @@ Static art for the project. Theme-aware where relevant.
 
 | File | Used by | Notes |
 |---|---|---|
-| `logo.svg` | Light-mode Streamlit sidebar, README header | Three equal horizontal lines on transparent background, stroke `#111111`. Minimalist mark representing stacked container layers. |
-| `logo-dark.svg` | Dark-mode Streamlit sidebar | Same three-line mark with white strokes for the dark surface. |
-| `logos/logo.svg`, `logos/logo-dark.svg` | Pinned legacy copies referenced by older docs | Kept identical to the root pair for back-compat. |
-| `favicon.svg` | Streamlit page icon, browser tab | Same mark with slightly thicker strokes so the lines stay crisp at 16x16 and 32x32. |
+| `logo.svg` | Light-mode Streamlit sidebar, README header | Black gear ring + black container stack on transparent background. Pure geometry, no third-party imagery. |
+| `logo-dark.svg` | Dark-mode Streamlit sidebar | White gear ring + white containers on transparent background. Uses an SVG `<mask>` to cut a true transparent hole in the hub so the sidebar background shows through. |
+| `logos/logo.svg`, `logos/logo-dark.svg` | Pinned legacy copies referenced by older docs and the VS Code extension scaffold | Kept identical to the root pair for back-compat. |
+| `favicon.svg` | Streamlit page icon, browser tab | Same gear mark, simplified for 16x16 / 32x32 rendering. |
 | `anim/*.json` | Streamlit `streamlit-lottie` panels (`hero-ai`, `hero-containers`, `pipeline-loader`, `loader-scan`, `success-notify`, `check-done`, `explain-geo`, `improve-spark`) | Lottie JSON, monochrome-by-design; the `web.py` CSS applies a `grayscale(1) invert(0.88)` filter so any residual hue collapses to the black-and-white palette. |
 
 ## Regenerating

@@ -1,10 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
-  <!-- Three equal horizontal lines, centred. Minimalist mark symbolising
-       stacked container layers. Black strokes on transparent so the mark
-       sits cleanly on any light surface. -->
-  <g stroke="#111111" stroke-width="3.5" stroke-linecap="round" fill="none">
-    <line x1="32" y1="40" x2="68" y2="40"/>
-    <line x1="32" y1="50" x2="68" y2="50"/>
-    <line x1="32" y1="60" x2="68" y2="60"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+
+  <!-- white canvas -->
+  <rect width="512" height="512" fill="white"/>
+
+  <!-- gear (automation symbol) -->
+  <path d="M 206.384,98.637 L 228.909,93.239 L 239.706,46.633 L 272.294,46.633 L 283.091,93.239 L 332.189,109.643 L 351.933,121.755 L 392.523,96.434 L 415.566,119.477 L 390.245,160.067 L 413.363,206.384 L 418.761,228.909 L 465.367,239.706 L 465.367,272.294 L 418.761,283.091 L 402.357,332.189 L 390.245,351.933 L 415.566,392.523 L 392.523,415.566 L 351.933,390.245 L 305.616,413.363 L 283.091,418.761 L 272.294,465.367 L 239.706,465.367 L 228.909,418.761 L 179.811,402.357 L 160.067,390.245 L 119.477,415.566 L 96.434,392.523 L 121.755,351.933 L 98.637,305.616 L 93.239,283.091 L 46.633,272.294 L 46.633,239.706 L 93.239,228.909 L 109.643,179.811 L 121.755,160.067 L 96.434,119.477 L 119.477,96.434 L 160.067,121.755 Z" fill="#111111"/>
+
+  <!-- hub cut-out — reveals the interior -->
+  <circle cx="256" cy="256" r="128" fill="white"/>
+
+  <!-- 3-layer container stack (Docker containerisation) -->
+  <rect x="180" y="198" width="152" height="32" rx="5" fill="#111111"/>
+  <line x1="198" y1="214" x2="314" y2="214" stroke="white" stroke-width="2" opacity="0.55"/>
+  <rect x="180" y="240" width="152" height="32" rx="5" fill="#111111"/>
+  <line x1="198" y1="256" x2="314" y2="256" stroke="white" stroke-width="2" opacity="0.55"/>
+  <rect x="180" y="282" width="152" height="32" rx="5" fill="#111111"/>
+  <line x1="198" y1="298" x2="314" y2="298" stroke="white" stroke-width="2" opacity="0.55"/>
+
 </svg>
