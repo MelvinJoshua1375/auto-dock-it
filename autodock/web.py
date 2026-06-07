@@ -252,6 +252,30 @@ _CSS_STRUCTURAL = """
     border-radius: 12px;
     background: var(--adi-code-bg) !important;
   }
+  /* Strip Pygments per-token backgrounds inside code blocks. In light mode
+     Streamlit ships a syntax theme that paints individual tokens
+     (`FROM`, `RUN`, language keywords) with a near-white inline
+     background-color, which renders as a series of disconnected white
+     chips floating inside our dark code panel. The container background
+     is owned by `--adi-code-bg`; the per-token chips need to be
+     transparent so the code reads as a single dark surface. */
+  div[data-testid="stCodeBlock"] pre,
+  div[data-testid="stCodeBlock"] pre code,
+  div[data-testid="stCodeBlock"] pre code *,
+  div[data-testid="stCodeBlock"] pre span,
+  div[data-testid="stCodeBlock"] code span {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
+  /* The live log panel uses `st.code(...)` with a plain language, which
+     ships as a `<pre>` inside the same `stCodeBlock` wrapper. Some
+     versions of Streamlit additionally wrap each line in a `<div>` with
+     its own background; flatten that too. */
+  div[data-testid="stCodeBlock"] pre > div,
+  div[data-testid="stCodeBlock"] pre > p {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
 
   /* Sidebar */
   section[data-testid="stSidebar"] {
@@ -808,31 +832,50 @@ _CSS_LIGHT_OVERRIDES = """
   /* Includes the form-submit variant: when the primary button lives inside
      st.form(...) it ships as .stFormSubmitButton, NOT .stButton, so previous
      rules silently fell through and produced white text on the white pill. */
-  .stButton > button[kind="primary"],
-  .stButton > button[kind="primary"]:hover,
-  .stButton > button[kind="primary"]:focus,
-  .stButton > button[kind="primary"]:active,
-  .stButton > button[kind="primary"][disabled],
-  .stFormSubmitButton > button[kind="primary"],
-  .stFormSubmitButton > button[kind="primary"]:hover,
-  .stFormSubmitButton > button[kind="primary"]:focus,
-  .stFormSubmitButton > button[kind="primary"]:active,
-  .stFormSubmitButton > button[kind="primary"][disabled],
-  [data-testid="stFormSubmitButton"] button[kind="primary"],
-  button[data-testid="stBaseButton-primaryFormSubmit"] {
+  /* Streamlit's form submit ships as `kind="primaryFormSubmit"`, NOT
+     `kind="primary"`. The earlier selectors that scoped on
+     `[kind="primary"]` matched nothing and the deployed Containerize
+     button rendered as white-on-white (effectively invisible). Match the
+     submit button on its real attributes and use a `body` ancestor to
+     outrank Streamlit's bundled !important rules that set `color:
+     rgba(245,245,245,0.4)` on disabled and `background-color: transparent`
+     across the board. */
+  body .stButton > button[kind="primary"],
+  body .stButton > button[kind="primary"]:hover,
+  body .stButton > button[kind="primary"]:focus,
+  body .stButton > button[kind="primary"]:active,
+  body .stButton > button[kind="primary"][disabled],
+  body .stFormSubmitButton > button,
+  body .stFormSubmitButton > button:hover,
+  body .stFormSubmitButton > button:focus,
+  body .stFormSubmitButton > button:active,
+  body .stFormSubmitButton > button[disabled],
+  body [data-testid="stFormSubmitButton"] button,
+  body button[data-testid="stBaseButton-primaryFormSubmit"],
+  body button[kind="primaryFormSubmit"] {
     background-color: var(--adi-primary-bg) !important;
     color: var(--adi-primary-text) !important;
     border-color: var(--adi-primary-bg) !important;
   }
-  .stButton > button[kind="primary"] p,
-  .stButton > button[kind="primary"] span,
-  .stButton > button[kind="primary"] *,
-  .stFormSubmitButton > button[kind="primary"] p,
-  .stFormSubmitButton > button[kind="primary"] span,
-  .stFormSubmitButton > button[kind="primary"] *,
-  [data-testid="stFormSubmitButton"] button[kind="primary"] *,
-  button[data-testid="stBaseButton-primaryFormSubmit"] * {
+  body .stButton > button[kind="primary"] p,
+  body .stButton > button[kind="primary"] span,
+  body .stButton > button[kind="primary"] *,
+  body .stFormSubmitButton > button p,
+  body .stFormSubmitButton > button span,
+  body .stFormSubmitButton > button *,
+  body [data-testid="stFormSubmitButton"] button *,
+  body button[data-testid="stBaseButton-primaryFormSubmit"] *,
+  body button[kind="primaryFormSubmit"] * {
     color: var(--adi-primary-text) !important;
+  }
+  /* Disabled state: keep the dark-on-white contrast, just dim to 55% so
+     the affordance is obvious without hiding the label entirely. */
+  body button[data-testid="stBaseButton-primaryFormSubmit"][disabled],
+  body button[kind="primaryFormSubmit"][disabled],
+  body button[data-testid="stBaseButton-primaryFormSubmit"][disabled] *,
+  body button[kind="primaryFormSubmit"][disabled] * {
+    opacity: 0.55 !important;
+    cursor: not-allowed !important;
   }
 
   /* ── Fix: Placeholder text visibility in inputs ──────────────────────── */
