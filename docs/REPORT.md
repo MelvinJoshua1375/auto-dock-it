@@ -6,7 +6,7 @@ Author: Melvin Joshua  ·  Report date: 2026-05-30
 
 | | |
 |---|---|
-| Live preview | https://auto-dock-it.streamlit.app |
+| Live preview | https://autodockit.streamlit.app |
 | Source | https://github.com/MelvinJoshua1375/auto-dock-it |
 | License | MIT |
 | Continuous integration | passing on Python 3.10, 3.11, 3.12, 3.13 |
@@ -136,7 +136,7 @@ Worth shipping next, ordered by impact:
 
 | | |
 |---|---|
-| Try it (preview mode) | https://auto-dock-it.streamlit.app |
+| Try it (preview mode) | https://autodockit.streamlit.app |
 | Code, issues, releases | https://github.com/MelvinJoshua1375/auto-dock-it |
 | Demos with attempt history | https://github.com/MelvinJoshua1375/auto-dock-it/tree/main/demos |
 | Changelog | https://github.com/MelvinJoshua1375/auto-dock-it/blob/main/CHANGELOG.md |

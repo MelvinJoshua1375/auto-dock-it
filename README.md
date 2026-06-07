@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://auto-dock-it.streamlit.app"><img src="https://img.shields.io/badge/Live%20Demo-auto--dock--it.streamlit.app-111111?style=flat-square&logo=streamlit&logoColor=white" alt="Live Demo"></a>
+  <a href="https://autodockit.streamlit.app"><img src="https://img.shields.io/badge/Live%20Demo-autodockit.streamlit.app-111111?style=flat-square&logo=streamlit&logoColor=white" alt="Live Demo"></a>
   <a href="https://codespaces.new/MelvinJoshua1375/auto-dock-it"><img src="https://img.shields.io/badge/Open%20in-GitHub%20Codespaces-111111?style=flat-square&logo=github&logoColor=white" alt="Open in Codespaces"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-111111?style=flat-square" alt="License: MIT"></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.10%2B-111111?style=flat-square&logo=python&logoColor=white" alt="Python 3.10+"></a>
@@ -116,7 +116,7 @@ Five stages, each writes to disk — the full run is reproducible and auditable:
 
 ## Live Demo
 
-The public demo at **[auto-dock-it.streamlit.app](https://auto-dock-it.streamlit.app)** runs in **preview mode** (ingest + analyze + generate) because Streamlit Cloud has no Docker daemon. Stages 4 and 5 — the self-healing build and runtime-repair — require a real Docker daemon.
+The public demo at **[autodockit.streamlit.app](https://autodockit.streamlit.app)** runs in **preview mode** (ingest + analyze + generate) because Streamlit Cloud has no Docker daemon. Stages 4 and 5 — the self-healing build and runtime-repair — require a real Docker daemon.
 
 **To see the full loop:**
 

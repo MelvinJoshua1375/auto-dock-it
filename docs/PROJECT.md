@@ -677,7 +677,7 @@ The supported path. Install once with `pip install -e .`, run `autodock run <url
 
 ### Streamlit Cloud
 
-The current deployed face at `https://auto-dock-it.streamlit.app`. Runs in preview mode (Stages 1-3 only) because Streamlit Cloud containers do not include the Docker daemon. The full pipeline still works locally; only the live preview is dry-run-only.
+The current deployed face at `https://autodockit.streamlit.app`. Runs in preview mode (Stages 1-3 only) because Streamlit Cloud containers do not include the Docker daemon. The full pipeline still works locally; only the live preview is dry-run-only.
 
 To deploy your own:
 1. Push the repo to GitHub.

@@ -43,7 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Source-code env-var grep (Python, Node, Go, Java, Ruby, PHP).
 - GitHub PR-back command: forks the upstream and opens a PR with the generated artifacts. Skips the fork when the upstream is self-owned.
 - Streamlit web UI with live log streaming.
-- Public preview deploy at https://auto-dock-it.streamlit.app.
+- Public preview deploy at https://autodockit.streamlit.app.
 - Pytest suite, ruff lint, Bandit security scan, GitHub Actions CI across Python 3.10 to 3.13.
 - Dependabot for pip and GitHub Actions.
 - MIT license.
