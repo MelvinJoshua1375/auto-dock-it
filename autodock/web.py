@@ -772,18 +772,33 @@ _CSS_LIGHT_OVERRIDES = """
   }
 
   /* ── Fix: Primary button text visibility (all states including disabled) ─── */
+  /* Includes the form-submit variant: when the primary button lives inside
+     st.form(...) it ships as .stFormSubmitButton, NOT .stButton, so previous
+     rules silently fell through and produced white text on the white pill. */
   .stButton > button[kind="primary"],
   .stButton > button[kind="primary"]:hover,
   .stButton > button[kind="primary"]:focus,
   .stButton > button[kind="primary"]:active,
-  .stButton > button[kind="primary"][disabled] {
+  .stButton > button[kind="primary"][disabled],
+  .stFormSubmitButton > button[kind="primary"],
+  .stFormSubmitButton > button[kind="primary"]:hover,
+  .stFormSubmitButton > button[kind="primary"]:focus,
+  .stFormSubmitButton > button[kind="primary"]:active,
+  .stFormSubmitButton > button[kind="primary"][disabled],
+  [data-testid="stFormSubmitButton"] button[kind="primary"],
+  button[data-testid="stBaseButton-primaryFormSubmit"] {
     background-color: var(--adi-primary-bg) !important;
     color: var(--adi-primary-text) !important;
     border-color: var(--adi-primary-bg) !important;
   }
   .stButton > button[kind="primary"] p,
   .stButton > button[kind="primary"] span,
-  .stButton > button[kind="primary"] * {
+  .stButton > button[kind="primary"] *,
+  .stFormSubmitButton > button[kind="primary"] p,
+  .stFormSubmitButton > button[kind="primary"] span,
+  .stFormSubmitButton > button[kind="primary"] *,
+  [data-testid="stFormSubmitButton"] button[kind="primary"] *,
+  button[data-testid="stBaseButton-primaryFormSubmit"] * {
     color: var(--adi-primary-text) !important;
   }
 
@@ -862,6 +877,34 @@ _CSS_LIGHT_OVERRIDES = """
   }
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:hover {
     border-color: var(--adi-text2) !important;
+  }
+  /* Round focus ring instead of Streamlit's default rectangular green oval. */
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:focus,
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 2px var(--adi-text2) !important;
+    border-color: var(--adi-text) !important;
+  }
+  /* Make the parent column hug the round button so the focus ring stays round
+     instead of stretching across the column's full width. */
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > div:has(button[data-testid="stBaseButton-secondary"][aria-describedby*="adi_theme"]),
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > div:has(button[data-testid="stBaseButton-secondary"]) {
+    flex: 0 0 auto !important;
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+  }
+  /* Wrapper Streamlit injects directly inside the column also needs to collapse,
+     otherwise the .stButton wrapper inherits the full column width and the focus
+     ring renders as a wide rounded rectangle around an inner round button. */
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] .stButton:has(button[data-testid="stBaseButton-secondary"]) {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    display: inline-block !important;
   }
 
   /* ── Question mark / tooltip icons — force visible in light mode ──────────
