@@ -98,8 +98,9 @@ ruff format autodock tests      # auto-format
 
 - **Type-hint** all new functions and methods.
 - **One blank line** between top-level functions; **two** between classes.
-- **No em dashes** in code, comments, prompts, or docs — use commas, colons, parentheses, or en dashes.
-- **No new dependencies** for a one-line problem — use the stdlib first.
+- **No em dashes** in code, comments, prompts, or docs - use commas, colons, parentheses, or hyphens with spaces.
+- **No emoji** in code, comments, commit messages, PR titles, or commit subjects. Material icons rendered via `:material/<name>:` are fine because they are monochrome glyphs and stay consistent across the UI; raw emoji are not. Keep commit subjects in plain sentence case (`Make sample buttons populate the URL field`), not `:sparkles: Make ...` or `feat: ...` etc.
+- **No new dependencies** for a one-line problem - use the stdlib first.
 - **Tests for new logic** — unit tests in `tests/`; integration tests behind `@pytest.mark.integration`.
 - **Keep the cleanup safe** — the Dockerfile safety scan (`assert_safe_dockerfile`) must never be weakened. Add tests when extending it.
 - **No `shell=True`** in any `subprocess.run()` call — always use argv-style lists.

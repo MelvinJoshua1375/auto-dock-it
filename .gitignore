@@ -47,3 +47,8 @@ desktop.ini
 # Editor temp files
 *.swp
 *~
+.idea/
+.vscode/*.local.json
+
+# Local Codespace SSH key material (never commit)
+.codespaces/

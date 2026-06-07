@@ -7,6 +7,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Unreleased
 
 ### Added
+- Pre-flight repo-access check in the web UI: before launching the pipeline subprocess, a 4-second HEAD request to GitHub confirms the URL resolves. Private, gated, or 404 URLs now surface a polished error card directly under the Containerize button instead of dumping a Rich traceback in the live agent log.
+- Enter-to-submit in the Containerize form: pressing Enter while focused on the GitHub URL input now triggers the same code path as clicking the button.
+- Codespaces user-secrets prompt: `.devcontainer/devcontainer.json` declares `GEMINI_API_KEY` and `GROQ_API_KEY` so Codespaces asks the visitor for them on creation and injects them into the shell on every start.
+- Demo run `demos/jenkins-demo/` with a rendered transcript image, full attempt history, and a per-run README walking through the two nested self-healing loops the pipeline fired.
+
+### Changed
+- Streamlit deployment subdomain renamed from `auto-dock-it.streamlit.app` to `autodockit.streamlit.app`. All in-repo references updated.
+- Sample-repo quick buttons now actually populate the URL field. The previous implementation wrote to a mirror key the keyed `st.text_input` did not read.
+- Theme toggle button rebuilt with `display: grid; place-items: center` and a round box-shadow focus ring, so the sun glyph sits at the optical centre and the keyboard focus indicator follows the circle instead of rendering as a rectangle.
+- Containerize primary button colour rules extended to cover `.stFormSubmitButton`; the post-form-refactor button no longer renders as white-on-white in dark mode.
+- Em-dash usages across user-facing copy replaced with hyphens, commas, or sentence breaks per the project punctuation rule.
+
+### Fixed
+- `autodock list`, `cleanup.prune_old_runs`, and the Streamlit artifact picker now recognise UUID-suffixed run IDs (`YYYYMMDD-HHMMSS-xxxxxx`); previously each silently dropped every new run because the regex only matched the legacy `YYYYMMDD-HHMMSS` shape.
+- `assert_safe_compose` correctly rejects `cap_add: ALL`, scalar `cap_add` / `volumes` / `devices` entries, `privileged: 'true'` (string form), and compose files with an empty or missing `services:` block.
+- `validate_compose` no longer reports success when the profile declares an exposed port but `docker compose port app <port>` cannot find a host mapping. That case now fails with a precise detail message instead of falling through to the "stack still up" branch.
+- `docker_runner.run` catches `FileNotFoundError`, `subprocess.TimeoutExpired`, and `OSError` and returns a normalised `CommandResult` so the pipeline never sees a bubbled subprocess exception.
+- HTTPS-only repo URLs enforced in the CLI to match the README contract.
+- HTTP validation success now requires `200 <= status < 400` instead of `< 500`, so a `401` / `403` / `404` no longer marks a container as valid.
+- `IngestError` for private or missing repos now carries a one-line user-facing message ("Auto-Dock It only supports PUBLIC GitHub repositories") instead of leaking the raw `GitCommandError` stderr.
+
+### Added
 - New B&W gear + container-stack logo (`assets/logo.svg`, `assets/logo-dark.svg`, `assets/favicon.svg`); replaces the previous coloured Docker-whale mark. Theme-aware: dark mode sidebar uses the white-on-transparent variant.
 - `CODE_OF_CONDUCT.md` (Contributor Covenant v2.1).
 - `SECURITY.md` with vulnerability reporting contacts and known design-decision notes.
