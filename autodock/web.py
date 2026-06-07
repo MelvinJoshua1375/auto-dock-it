@@ -896,23 +896,19 @@ _CSS_LIGHT_OVERRIDES = """
   [data-testid="stSidebar"] .st-key-adi_theme_btn button * {
     display: none !important;
   }
-  /* Sun icon: shown while currently in dark mode (button offers to switch
-     TO light). aria-label is set from `help="Switch to light mode"`. Stroke
-     `#f5f5f5` reads on the dark sidebar surface. SVG viewBox 0 0 24 24. */
-  [data-testid="stSidebar"] .st-key-adi_theme_btn button[aria-label*="light"],
-  [data-testid="stSidebar"] .st-key-adi_theme_btn button[title*="light"] {
+  /* Sun icon: painted while the app is in DARK mode. The button click takes
+     the app to LIGHT, so showing the sun-icon-of-the-current-mode is the
+     convention. Stroke `#f5f5f5` reads on the dark sidebar surface.
+     Selector switches on `data-adi-theme` on <html>, set by the inline JS
+     near the bottom of this style sheet. */
+  html[data-adi-theme="dark"] [data-testid="stSidebar"] .st-key-adi_theme_btn button,
+  html:not([data-adi-theme]) [data-testid="stSidebar"] .st-key-adi_theme_btn button {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><path d='M12 2v2'/><path d='M12 20v2'/><path d='m4.93 4.93 1.41 1.41'/><path d='m17.66 17.66 1.41 1.41'/><path d='M2 12h2'/><path d='M20 12h2'/><path d='m6.34 17.66-1.41 1.41'/><path d='m19.07 4.93-1.41 1.41'/></svg>") !important;
   }
-  /* Moon icon: shown while currently in light mode (button offers to switch
-     TO dark). Stroke `#111` reads on the light sidebar surface. */
-  [data-testid="stSidebar"] .st-key-adi_theme_btn button[aria-label*="dark"],
-  [data-testid="stSidebar"] .st-key-adi_theme_btn button[title*="dark"] {
+  /* Moon icon: painted while the app is in LIGHT mode. Stroke `#111` reads
+     on the light sidebar surface. */
+  html[data-adi-theme="light"] [data-testid="stSidebar"] .st-key-adi_theme_btn button {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>") !important;
-  }
-  /* Fallback in case the aria-label hasn't been wired yet (very first paint
-     before Streamlit has injected the tooltip wrapper): default to the sun. */
-  [data-testid="stSidebar"] .st-key-adi_theme_btn button:not([aria-label*="dark"]):not([aria-label*="light"]):not([title*="dark"]):not([title*="light"]) {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><path d='M12 2v2'/><path d='M12 20v2'/><path d='m4.93 4.93 1.41 1.41'/><path d='m17.66 17.66 1.41 1.41'/><path d='M2 12h2'/><path d='M20 12h2'/><path d='m6.34 17.66-1.41 1.41'/><path d='m19.07 4.93-1.41 1.41'/></svg>") !important;
   }
   [data-testid="stSidebar"] .st-key-adi_theme_btn button:hover {
     border-color: var(--adi-text2) !important;
@@ -1208,6 +1204,28 @@ def _inject_js() -> None:
       localStorage.setItem(LSKEY,curBg==='#f8f8f8'?'dark':'light');
     }
   },true);
+
+  /* ── Reflect the current theme as `data-adi-theme` on <html> so CSS can
+     pick the correct theme-toggle SVG (sun in dark mode, moon in light
+     mode). aria-label on the Streamlit button is empty in current versions,
+     so this attribute is the reliable selector signal. */
+  function updateThemeAttr(){
+    var bg=getComputedStyle(document.documentElement)
+      .getPropertyValue('--adi-bg').trim();
+    document.documentElement.setAttribute(
+      'data-adi-theme', bg==='#f8f8f8'?'light':'dark');
+  }
+  updateThemeAttr();
+  /* Re-evaluate whenever the body class changes (Streamlit theme swaps),
+     when a click bubbles up (the toggle was pressed), and on a poll for
+     the first 5 s in case neither event fires. */
+  new MutationObserver(updateThemeAttr).observe(document.body,
+    {attributes:true,attributeFilter:['class','style']});
+  document.addEventListener('click',function(){setTimeout(updateThemeAttr,80);},true);
+  var pollN=0;var pollId=setInterval(function(){
+    updateThemeAttr();
+    if(++pollN>=25)clearInterval(pollId);
+  },200);
 
   /* ── S10: Mobile sidebar overlay backdrop ─────────────────────────────── */
   if(window.innerWidth<=900){
