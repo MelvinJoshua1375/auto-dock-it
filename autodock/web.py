@@ -834,62 +834,71 @@ _CSS_LIGHT_OVERRIDES = """
     border-color: var(--adi-text2) !important;
   }
 
-  /* ── Theme toggle button: perfect circle + optically centred icon ─────────── */
+  /* ── Theme toggle button: perfect circle + DOM-agnostic centred icon ──────── */
+  /* The button is a 40x40 grid container with `place-items: center`, so any
+     descendant Streamlit injects -- a div wrapper, a <p>, a Material span, an
+     <svg> -- lands at the geometric centre regardless of the inner markup. */
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] {
     background-color: var(--adi-surface) !important;
     color: var(--adi-text) !important;
     border: 1.5px solid var(--adi-border2) !important;
-    /* perfect circle */
     width: 40px !important;
     height: 40px !important;
     min-width: 40px !important;
     min-height: 40px !important;
     padding: 0 !important;
     border-radius: 50% !important;
-    /* icon centring (overrides Streamlit's default left-aligned flex layout) */
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    display: grid !important;
+    place-items: center !important;
     line-height: 1 !important;
-    /* nudge the column itself flush right so the round button sits beside the logo,
-       not floating in dead space */
     margin-left: auto !important;
+    overflow: hidden !important;  /* keep stray inner-wrapper edges inside the circle */
   }
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] > div,
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] p,
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] span {
-    /* inner wrappers Streamlit injects around the Material icon glyph -- strip their
-       own padding/margin so the glyph itself becomes the bounding box and centres on
-       both axes of the parent flex container. */
+  /* Every descendant: zero own margin/padding, collapse to its content size,
+     and centre its own children too. Belt-and-braces against future Streamlit
+     wrapper changes. */
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] *,
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] > * {
     margin: 0 !important;
     padding: 0 !important;
     line-height: 1 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    display: grid !important;
+    place-items: center !important;
+    text-align: center !important;
+    width: auto !important;
+    height: auto !important;
   }
+  /* Pin the Material glyph itself to a fixed size and nudge it down 1 px for
+     optical centring (baseline metrics include a descender slack the visible
+     drawing does not use). */
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] span[class*="material"],
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] .material-symbols-outlined,
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] .material-icons {
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] .material-icons,
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] svg {
     font-size: 20px !important;
     line-height: 1 !important;
-    display: block !important;
-    /* Material icon glyphs are centered on their text baseline, not their cap
-       height, leaving unused descender slack below the visible drawing.
-       The result is a glyph that sits about 1-2 px above the geometric centre
-       of a flex-centred container. Nudge it down so the visible icon ends up
-       at the optical centre of the round button. */
     transform: translateY(1px) !important;
   }
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:hover {
     border-color: var(--adi-text2) !important;
   }
-  /* Round focus ring instead of Streamlit's default rectangular green oval. */
+  /* Round focus ring + remove every default outline source (browser default
+     :focus, Streamlit's primary-coloured :focus-visible, OS accent ring). */
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:focus,
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:focus-visible {
-    outline: none !important;
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:focus-visible,
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:focus-within {
+    outline: 0 none transparent !important;
+    outline-offset: 0 !important;
     box-shadow: 0 0 0 2px var(--adi-text2) !important;
     border-color: var(--adi-text) !important;
+  }
+  /* Also kill the outline on the .stButton wrapper, which Streamlit sometimes
+     receives :focus-within and re-paints with its primary outline. */
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] .stButton:focus,
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] .stButton:focus-within,
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] .stButton:focus-visible {
+    outline: 0 none transparent !important;
+    box-shadow: none !important;
   }
   /* Make the parent column hug the round button so the focus ring stays round
      instead of stretching across the column's full width. */
