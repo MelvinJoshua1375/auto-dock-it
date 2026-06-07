@@ -1327,7 +1327,7 @@ def render() -> None:
             '<p style="font-size:1.08rem;line-height:1.6;color:var(--adi-text2);">'
             "Point it at any public GitHub repository and Auto-Dock It infers the "
             "runtime, writes a production-grade Dockerfile, builds it, and "
-            "self-heals through failures, all driven by an LLM."
+            "self-heals through failures - all driven by an LLM."
             "</p>",
             unsafe_allow_html=True,
         )
@@ -1409,7 +1409,7 @@ def render() -> None:
     preview_mode = not _docker_available(docker_bin)
     if preview_mode:
         st.info(
-            "**Preview mode.** Docker is not reachable from this environment. "
+            "**Preview mode** - Docker is not reachable from this environment. "
             "The pipeline will run ingest, analyze, and generate only. "
             "Clone the repo and run `autodock run <url>` locally for the full "
             "self-healing containerization flow."
@@ -1769,7 +1769,7 @@ def _render_containerize(
         _section_header(
             _icon("package"),
             "Containerize a repository",
-            "Point it at a public GitHub repo. It ingests, analyses, generates, and self-heals.",
+            "Point it at a public GitHub repo - it ingests, analyses, generates, and self-heals.",
         )
 
     # Sample quick-start buttons — S9: differentiated with language icons (already set via icon=)
