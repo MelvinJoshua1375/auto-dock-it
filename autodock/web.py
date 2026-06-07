@@ -1837,34 +1837,39 @@ def _render_containerize(
             st.session_state.repo_url_input = url
             st.rerun()
 
-    repo_url = st.text_input(
-        "GitHub repository URL",
-        placeholder="https://github.com/user/repo",
-        key="repo_url_input",
-    )
+    # Wrap the URL input and the Containerize button in a form so pressing Enter
+    # while focused on the input submits the form (Streamlit's default form
+    # behaviour). The sample quick-start buttons stay OUTSIDE the form because
+    # they only need to write to session_state, not kick off a run.
+    with st.form("adi_containerize_form", clear_on_submit=False, border=False):
+        repo_url = st.text_input(
+            "GitHub repository URL",
+            placeholder="https://github.com/user/repo",
+            key="repo_url_input",
+        )
 
-    # S2: Inline URL validation feedback — shows ✓ / ✗ as user types
-    if repo_url.strip():
-        if _valid_github_url(repo_url.strip()):
-            st.markdown(
-                '<span class="adi-url-ok">✓ Valid GitHub URL</span>',
-                unsafe_allow_html=True,
-            )
-        else:
-            st.markdown(
-                '<span class="adi-url-err">✗ Enter a https://github.com/owner/repo URL</span>',
-                unsafe_allow_html=True,
-            )
+        # S2: Inline URL validation feedback — shows OK / NOT-OK as user types
+        if repo_url.strip():
+            if _valid_github_url(repo_url.strip()):
+                st.markdown(
+                    '<span class="adi-url-ok">Valid GitHub URL</span>',
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    '<span class="adi-url-err">Enter a https://github.com/owner/repo URL</span>',
+                    unsafe_allow_html=True,
+                )
 
-    go = st.button(
-        ":material/rocket_launch:  Containerize",
-        type="primary",
-        disabled=not repo_url,
-        use_container_width=True,
-    )
+        go = st.form_submit_button(
+            ":material/rocket_launch:  Containerize",
+            type="primary",
+            disabled=not repo_url,
+            use_container_width=True,
+        )
     # S4: Keyboard hint
     if not repo_url:
-        st.caption("Paste a GitHub URL above, then press **Ctrl+Enter** or click Containerize.")
+        st.caption("Paste a GitHub URL above and press **Enter**, or click Containerize.")
 
     if not go:
         # Show the last pipeline result if one exists so artifacts persist
