@@ -1,0 +1,62 @@
+name: Feature Request
+description: Suggest an idea or improvement for Auto-Dock It
+labels: ["enhancement"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature. Before submitting, check the [Roadmap](https://github.com/MelvinJoshua1375/auto-dock-it#roadmap) and open [issues](https://github.com/MelvinJoshua1375/auto-dock-it/issues) to avoid duplicates.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the limitation or gap you are running into. A clear problem statement helps evaluate the request.
+      placeholder: "When I run Auto-Dock It against a Rust repo, the port detection often misses the configured port because…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe what you would like to happen. Concrete examples help — a CLI flag, a config option, a new command, a behaviour change, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you think of? Why are they insufficient?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area does this touch?
+      multiple: true
+      options:
+        - LLM pipeline (analyze / generate / repair)
+        - Docker / build / validate
+        - Web UI (Streamlit)
+        - CLI
+        - New LLM backend
+        - Language / framework detection
+        - Documentation
+        - Security
+        - Performance
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Links, prior art, related issues, or additional context
+    validations:
+      required: false

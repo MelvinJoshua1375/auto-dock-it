@@ -1,0 +1,107 @@
+name: Bug Report
+description: Something isn't working as expected
+labels: ["bug"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Fill in as much detail as you can — the `output/<run_id>/` artifacts are especially useful.
+
+  - type: input
+    id: repo_url
+    attributes:
+      label: Repository URL or local path
+      description: The GitHub URL or local directory you passed to Auto-Dock It
+      placeholder: "https://github.com/owner/repo"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: llm_provider
+    attributes:
+      label: LLM Provider
+      options:
+        - gemini
+        - groq
+        - Other (describe below)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: interface
+    attributes:
+      label: Interface used
+      options:
+        - CLI (autodock run …)
+        - Web UI (streamlit run …)
+        - Both
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or action
+      description: The exact command you ran, or what you did in the UI
+      placeholder: "autodock run https://github.com/owner/repo"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What actually happened? Paste the error output or describe what you saw.
+    validations:
+      required: true
+
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Relevant artifacts
+      description: |
+        Paste the tail of the relevant files from `output/<run_id>/attempts/` — the failing Dockerfile, build error, or validation output. You can drag-and-drop files here.
+    validations:
+      required: false
+
+  - type: input
+    id: python_version
+    attributes:
+      label: Python version
+      placeholder: "python --version"
+    validations:
+      required: true
+
+  - type: input
+    id: docker_version
+    attributes:
+      label: Docker version
+      placeholder: "docker version --format '{{.Server.Version}}'"
+    validations:
+      required: false
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "Ubuntu 24.04 / macOS 15 / Windows 11"
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Additional context, related issues, or things you already tried
+    validations:
+      required: false

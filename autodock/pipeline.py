@@ -46,7 +46,7 @@ def run_pipeline(
     run_dir = output_root / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "metadata.json").write_text(
-        json.dumps({"run_id": run_id, "repo_url": repo_url})
+        json.dumps({"run_id": run_id, "repo_url": repo_url}), encoding="utf-8"
     )
     llm = LLM(settings)
 
@@ -65,20 +65,20 @@ def run_pipeline(
         profile = analyze(repo_dir, llm)
         if sha:
             cache.put(repo_url, sha, profile)
-    (run_dir / "profile.json").write_text(profile.model_dump_json(indent=2))
+    (run_dir / "profile.json").write_text(profile.model_dump_json(indent=2), encoding="utf-8")
     console.print(f"  detected {profile.language}/{profile.framework or 'no framework'} on port {profile.exposed_port}")
 
     console.print("[bold]Stage 3: Generate[/bold]")
     dockerfile = generate_dockerfile(profile, llm)
-    (run_dir / "Dockerfile").write_text(dockerfile)
-    (run_dir / "autodock.yaml").write_text(generate_autodock_config(profile))
+    (run_dir / "Dockerfile").write_text(dockerfile, encoding="utf-8")
+    (run_dir / "autodock.yaml").write_text(generate_autodock_config(profile), encoding="utf-8")
     console.print(f"  wrote Dockerfile ({len(dockerfile)} bytes) and autodock.yaml")
 
     use_compose = bool(profile.services)
     compose_yaml: str | None = None
     if use_compose:
         compose_yaml = generate_compose(profile, dockerfile, llm)
-        (run_dir / "docker-compose.yml").write_text(compose_yaml)
+        (run_dir / "docker-compose.yml").write_text(compose_yaml, encoding="utf-8")
         console.print(f"  detected {len(profile.services)} service(s); wrote docker-compose.yml")
 
     if dry_run:
@@ -96,14 +96,14 @@ def run_pipeline(
         llm=llm,
         console=console,
     )
-    (run_dir / "Dockerfile").write_text(outcome.final_dockerfile)
+    (run_dir / "Dockerfile").write_text(outcome.final_dockerfile, encoding="utf-8")
     if not outcome.success:
         return PipelineResult(False, run_dir, None, "build",
                               f"build failed after {len(outcome.attempts)} attempt(s)")
 
     console.print("[bold]Stage 5: Validate[/bold]")
     if use_compose and compose_yaml:
-        (repo_dir / "docker-compose.yml").write_text(compose_yaml)
+        (repo_dir / "docker-compose.yml").write_text(compose_yaml, encoding="utf-8")
         result = validate_compose(repo_dir=str(repo_dir), profile=profile,
                                   settings=settings, console=console,
                                   project=compose_project)
@@ -137,7 +137,7 @@ def run_pipeline(
             console.print("[red]Runtime-repaired Dockerfile did not build; stopping.[/red]")
             break
         current_dockerfile = outcome2.final_dockerfile
-        (run_dir / "Dockerfile").write_text(current_dockerfile)
+        (run_dir / "Dockerfile").write_text(current_dockerfile, encoding="utf-8")
         if use_compose and compose_yaml:
             result = validate_compose(repo_dir=str(repo_dir), profile=profile,
                                       settings=settings, console=console,
@@ -148,7 +148,8 @@ def run_pipeline(
                                         run_id=run_id)
 
     (run_dir / "validation.txt").write_text(
-        f"ok={result.ok}\ndetail={result.detail}\n\nlogs:\n{result.container_logs_tail}\n"
+        f"ok={result.ok}\ndetail={result.detail}\n\nlogs:\n{result.container_logs_tail}\n",
+        encoding="utf-8",
     )
     if result.ok:
         console.print(f"[green]Validation OK: {result.detail}[/green]")
@@ -170,7 +171,7 @@ def run_pipeline(
         "input_tokens": usage["input_tokens"],
         "output_tokens": usage["output_tokens"],
         "estimated_cost_usd": round(cost, 6),
-    }, indent=2))
+    }, indent=2), encoding="utf-8")
 
     # cleanup: remove the image to keep host clean (best effort)
     docker_runner.run(settings, ["rmi", image_tag], timeout=15, capture=True)

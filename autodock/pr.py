@@ -61,7 +61,7 @@ def open_pr(run_dir: Path, *, gh_bin: str = "gh", console: Console | None = None
     meta_path = run_dir / "metadata.json"
     if not meta_path.exists():
         raise PrError(f"metadata.json missing in {run_dir}")
-    meta = json.loads(meta_path.read_text())
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
     upstream_url = meta.get("repo_url", "")
     if not upstream_url.startswith("http"):
         raise PrError(f"PR feature requires an http(s) GitHub URL; got {upstream_url!r}")

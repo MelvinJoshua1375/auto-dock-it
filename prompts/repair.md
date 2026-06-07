@@ -18,7 +18,7 @@ Last 80 lines of build error output:
 ```
 
 Rules:
-- Diagnose the root cause from the error log. Common issues: missing OS packages, wrong base image, missing build tools (gcc, make), wrong manifest path, network-restricted commands, port conflicts, missing files.
+- Diagnose the root cause from the error log. Common issues: missing OS packages, wrong base image, missing build tools (gcc, make), wrong manifest path, network-restricted commands, port conflicts, missing files, and `chown user:group` referencing a group that was never created (fix by creating the user with a matching group, eg `adduser --system --group <name>` on Debian slim).
 - Return the full corrected Dockerfile. Output the raw text only, no prose, no markdown fences.
 - First non-comment line must be `FROM`.
 - Do not introduce new failure modes. If you change the base image, keep it minimal and pinned.

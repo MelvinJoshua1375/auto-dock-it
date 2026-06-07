@@ -1,109 +1,300 @@
-# Auto-Dock It
-
 <p align="center">
-  <img src="assets/logo.svg" alt="Auto-Dock It logo" width="96" />
+  <img src="assets/logo.svg" alt="Auto-Dock It" width="110" />
 </p>
 
-[![Live](https://img.shields.io/badge/Live-auto--dock--it.streamlit.app-0db7ed?logo=streamlit&logoColor=white)](https://auto-dock-it.streamlit.app)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/MelvinJoshua1375/auto-dock-it)
-[![CI](https://github.com/MelvinJoshua1375/auto-dock-it/actions/workflows/ci.yml/badge.svg)](https://github.com/MelvinJoshua1375/auto-dock-it/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/MelvinJoshua1375/auto-dock-it/branch/main/graph/badge.svg)](https://codecov.io/gh/MelvinJoshua1375/auto-dock-it)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+<h1 align="center">Auto-Dock It</h1>
 
-Agentic LLM tool that clones a public GitHub repository, figures out its stack, generates a Dockerfile (and `docker-compose.yml` when external services are needed), builds it with a self-healing loop, runs the container, and confirms the app actually responds.
+<p align="center">
+  <strong>Point it at any public GitHub repository — it figures out the stack, writes a production-grade Dockerfile, builds it, and self-heals through failures. All driven by an LLM.</strong>
+</p>
 
-## What makes it different
+<p align="center">
+  <a href="https://auto-dock-it.streamlit.app"><img src="https://img.shields.io/badge/Live%20Demo-auto--dock--it.streamlit.app-111111?style=flat-square&logo=streamlit&logoColor=white" alt="Live Demo"></a>
+  <a href="https://codespaces.new/MelvinJoshua1375/auto-dock-it"><img src="https://img.shields.io/badge/Open%20in-GitHub%20Codespaces-111111?style=flat-square&logo=github&logoColor=white" alt="Open in Codespaces"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-111111?style=flat-square" alt="License: MIT"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.10%2B-111111?style=flat-square&logo=python&logoColor=white" alt="Python 3.10+"></a>
+  <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json&style=flat-square" alt="Ruff"></a>
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-111111?style=flat-square" alt="PRs Welcome"></a>
+</p>
 
-Existing tools either skip the LLM entirely (Nixpacks, Buildpacks, repo2docker) and break on unusual repos, or use an LLM in a one-shot "write me a Dockerfile" prompt and ship whatever comes back. This project does neither: it treats Dockerfile generation as an **agentic loop**. When `docker build` fails, the truncated error log goes back to the LLM with the current Dockerfile, the model returns a patch, and the build is retried. If the container builds but the app fails to respond on its port, the container logs are fed back for a second round of repair.
+---
 
-Every attempt is saved under `output/<run_id>/attempts/` so the whole loop is auditable.
+## Table of Contents
 
-### Comparison
+- [About](#about)
+- [What Makes It Different](#what-makes-it-different)
+- [Pipeline](#pipeline)
+- [Features](#features)
+- [Live Demo](#live-demo)
+- [Demo Runs](#demo-runs)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Web UI](#web-ui)
+- [CLI Reference](#cli-reference)
+- [Configuration](#configuration)
+- [Deploy Your Own Instance](#deploy-your-own-instance)
+- [Security Notes](#security-notes)
+- [Build From Source](#build-from-source)
+- [Contributing](#contributing)
+- [Roadmap](#roadmap)
+- [License](#license)
+- [Contact](#contact)
+- [Acknowledgements](#acknowledgements)
 
-| Tool | Approach | Handles unusual repos | Self-heals errors | Multi-service | Open-source |
-|---|---|---|---|---|---|
-| Nixpacks | Rule-based detection | Limited | No | No | Yes |
-| Cloud Native Buildpacks | Curated builders per language | Limited | No | No | Yes |
-| repo2docker | Jupyter-focused, rule-based | Jupyter only | No | No | Yes |
-| One-shot LLM demos | Single prompt, no validation | Depends on model | No | No | Varies |
-| **Auto-Dock It** | LLM + agentic loop + validation | Yes | Yes (build + runtime) | Yes | Yes |
+---
+
+## About
+
+Containerizing a repository is still a manual process for most teams. You look at the stack, write a Dockerfile, fight with build errors, tweak the CMD, realise the app needs an env var you forgot — and repeat. Tools like Nixpacks and Buildpacks automate the *happy path* only; the moment a repo is non-standard, you are on your own.
+
+**Auto-Dock It** treats Dockerfile generation as an **agentic loop**:
+
+1. It clones the repository and builds a structured profile of the stack using an LLM.
+2. It generates a Dockerfile (and `docker-compose.yml` for multi-service repos).
+3. It runs `docker build`. On failure, the truncated error is sent back to the LLM with the current Dockerfile; the model returns a patch; the build is retried.
+4. The container is started and the exposed port is polled for HTTP 2xx/3xx. On failure, container logs go back to the LLM for a second round of repair.
+
+Every attempt is saved under `output/<run_id>/attempts/`, making the entire loop auditable.
+
+---
+
+## What Makes It Different
+
+| Capability | Nixpacks | Buildpacks | repo2docker | One-shot LLM | **Auto-Dock It** |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Handles unusual / non-standard repos | ⚠️ | ⚠️ | ❌ | ⚠️ | ✅ |
+| Self-heals build errors | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Self-heals runtime errors | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Multi-service (Docker Compose) | ❌ | ❌ | ❌ | ⚠️ | ✅ |
+| Full audit trail of every attempt | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Bring-your-own LLM key (BYOK) | — | — | — | — | ✅ |
+| Open source | ✅ | ✅ | ✅ | Varies | ✅ |
+
+---
 
 ## Pipeline
 
 ```
-                   ┌────────┐    ┌────────┐    ┌──────────┐    ┌─────────────┐    ┌──────────┐
-   github URL ───► │ Ingest │───►│ Analyze│───►│ Generate │───►│ Build (loop)│───►│ Validate │
-                   └────────┘    └────────┘    └──────────┘    └─────────────┘    └──────────┘
-                       │              │              │                │                  │
-                  shallow clone   structured     Dockerfile +    docker build       docker run
-                  (depth 1)       profile from   autodock.yaml   ↺ LLM repair on    + HTTP poll
-                                  manifests +    + compose.yml   error              ↺ LLM repair
-                                  LLM            if multi-svc                       on bad logs
+                ┌─────────┐   ┌─────────┐   ┌──────────┐   ┌──────────────┐   ┌──────────┐
+ GitHub URL ──► │  Ingest │──►│ Analyze │──►│ Generate │──►│ Build (loop) │──►│ Validate │
+                └─────────┘   └─────────┘   └──────────┘   └──────────────┘   └──────────┘
+                     │              │              │                │                 │
+               shallow clone   LLM builds    Dockerfile +    docker build       docker run
+               200 MB cap      RepoProfile   compose.yml     ↺ LLM repair       + HTTP poll
+                               from files    if multi-svc    on build error      ↺ LLM repair
+                               + manifests                   (max 4 retries)     on bad logs
 
-                  every artifact saved under output/<run_id>/  →  audit trail
+                every artifact → output/<run_id>/   (attempts/, usage.json, validation.txt)
 ```
 
-Five stages, each writes to disk so the run is reproducible and auditable:
+Five stages, each writes to disk — the full run is reproducible and auditable:
 
-1. **Ingest**: shallow clone, 200 MB cap.
-2. **Analyze**: tree summary, manifest files, README excerpt, entrypoint configs (`gunicorn_config.py`, `wsgi.py`, etc.) fed to the LLM; returns a structured Pydantic `RepoProfile`. Cached per commit SHA so re-runs skip the LLM call.
-3. **Generate**: Dockerfile from the profile. If `services` is non-empty, also generates `docker-compose.yml`.
-4. **Build (self-healing)**: `docker build`; on failure, LLM repair, retry up to `MAX_BUILD_RETRIES` (default 4).
-5. **Validate**: runs the container or compose stack, polls the app port for HTTP 2xx/3xx. On failure, up to 2 runtime-repair cycles feeding container logs back.
+| Stage | What it does |
+|---|---|
+| **Ingest** | Shallow-clones the repo (depth 1, 200 MB cap). Validates the URL against `github.com` before any network call. |
+| **Analyze** | Reads manifests, tree summary, README excerpt, entrypoint configs. Sends to LLM; returns a structured `RepoProfile`. Cached per commit SHA — re-runs skip the LLM call. |
+| **Generate** | Writes `Dockerfile` from the profile. If `services` is non-empty, also writes `docker-compose.yml`. |
+| **Build** | Runs `docker build`. On failure, the error is sent back with the current Dockerfile; the LLM returns a patch; retry. Up to `MAX_BUILD_RETRIES` (default 4). |
+| **Validate** | Starts the container (or compose stack), polls the app's exposed port for HTTP 2xx/3xx. On failure, container logs go back to the LLM for up to 2 runtime-repair cycles. |
 
-## See the agentic loop without installing anything
+---
 
-The public Streamlit demo at [auto-dock-it.streamlit.app](https://auto-dock-it.streamlit.app) runs **preview mode** (ingest + analyze + generate) because the Streamlit Cloud sandbox has no Docker daemon. The differentiator, the self-healing build and runtime-repair loop, lives in stages 4 and 5 and needs a real Docker daemon. Two ways to see it without a local install:
+## Features
 
-**Option A — Open in GitHub Codespaces (~60 seconds, free 60 hrs/month per GitHub account).** Click the Codespaces badge at the top of this README. The `.devcontainer/` config preinstalls Python, Docker-in-Docker, and `pip install -e .[dev,ui]`. Once the IDE loads, in the terminal:
+- **Self-healing build loop** — failed `docker build` outputs are fed back to the LLM for automated repair and retry.
+- **Runtime-repair loop** — if the container starts but the app doesn't respond, container logs drive a second LLM repair cycle.
+- **Docker Compose** — auto-generates `docker-compose.yml` when multiple services are detected, with `docker compose port` for port discovery.
+- **BYOK (Bring Your Own Key)** — paste your Gemini or Groq API key in the UI to bypass rate limits and use your own quota.
+- **Full audit trail** — every attempt, the error that triggered repair, and the patch are saved under `output/<run_id>/attempts/`.
+- **Explain & Improve** — CLI/UI commands to get a line-by-line walkthrough of any Dockerfile and prioritized improvement suggestions with diffs.
+- **PR back to upstream** — after a successful run, `autodock pr` forks the repo and opens a pull request with the generated artifacts.
+- **Web UI** — a Streamlit dashboard with live log streaming, sample-repo buttons, and a BYOK field.
+- **Free-tier friendly** — works with Gemini 2.5 Flash (20 req/day free) and Groq Llama 3.3 70B (~14,000 req/day free).
+- **Security-hardened** — symlink path-traversal protection, LLM-output Dockerfile safety scan, prompt-injection guards, multi-user env isolation.
+
+---
+
+## Live Demo
+
+The public demo at **[auto-dock-it.streamlit.app](https://auto-dock-it.streamlit.app)** runs in **preview mode** (ingest + analyze + generate) because Streamlit Cloud has no Docker daemon. Stages 4 and 5 — the self-healing build and runtime-repair — require a real Docker daemon.
+
+**To see the full loop:**
+
+**Option A — GitHub Codespaces (free, ~60 seconds):**
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/MelvinJoshua1375/auto-dock-it)
+
+The `.devcontainer/` config pre-installs Python, Docker-in-Docker, and the package. Once the IDE loads:
 
 ```bash
-export GEMINI_API_KEY=your_key_here   # get a free one at aistudio.google.com
+export GEMINI_API_KEY=your_key_here   # free at aistudio.google.com
 autodock run https://github.com/MelvinJoshua1375/githubactions-demo
 ```
 
-Watch attempts 0 → 1 → ... land under `output/<run_id>/attempts/`, then a final HTTP 200 validation.
+Watch attempts land under `output/<run_id>/attempts/`, then a final HTTP 200 validation.
 
-**Option B — Read the captured runs in [`demos/`](demos/).** Each folder is a real pipeline run with every attempted Dockerfile, the build error that triggered the LLM repair, and the final `validation.txt`. Start with [`demos/runtime-loop-fired/`](demos/runtime-loop-fired/) where the agent installed `pandoc` after reading a `FileNotFoundError` from container logs, or [`demos/broken-flask/`](demos/broken-flask/) where it `sed`-patched a typo in `requirements.txt` at build time.
+**Option B — Read captured runs** in [`demos/`](demos/). Each folder has every attempted Dockerfile, the build error, the repair, and `validation.txt`.
 
-## Live agentic run on a fresh user repo
+---
 
-Below is a real end-to-end run on [`MelvinJoshua1375/jenkins-demo`](https://github.com/MelvinJoshua1375/jenkins-demo), executed inside a GitHub Codespace with Groq as the LLM. Two self-healing loops fired: an outer one when the built container did not actually serve traffic on the exposed port, and an inner one when the LLM's first repair attempt itself failed at build time. Full artifacts in [`demos/jenkins-demo/`](demos/jenkins-demo/).
+## Demo Runs
 
-![End-to-end run on jenkins-demo](demos/jenkins-demo/run.png)
+Nine real pipeline runs captured in [`demos/`](demos/):
 
-## Demos
-
-Nine runs captured in [`demos/`](demos/) with full attempt logs and per-run usage stats.
-
-| Demo | Stack | Attempts | Outcome |
+| Demo | Stack | Self-healing | Outcome |
 |---|---|---|---|
-| [`demos/jenkins-demo`](demos/jenkins-demo/) | Flask web app from a real user repo; bind port mismatch (8501 inside vs EXPOSE 8000) | 1 build + 2 repairs (1 nested) | HTTP 200; outer loop patched `sed 8501->8000`, inner loop fixed `USER` ordering |
-| [`demos/flask`](demos/flask/) | Python + Flask + gunicorn | 2 (1 build repair) | HTTP 200 |
-| [`demos/nodejs`](demos/nodejs/) | Node + Express | 2 (1 build repair) | HTTP 200 |
-| [`demos/broken-flask`](demos/broken-flask/) | Flask with `flsk` typo in requirements.txt | 4 (3 build repairs) | HTTP 200, LLM `sed`-patched the typo at build time |
-| [`demos/flask-redis`](demos/flask-redis/) | Flask + Redis multi-service | 1 | HTTP 200, auto-generated compose file |
-| [`demos/flask-postgres`](demos/flask-postgres/) | Flask + Postgres multi-service with `psycopg` | 1 | HTTP 200, compose file with `postgres:16` sidecar, env vars routed both as `DATABASE_URL` and discrete `POSTGRES_*` |
-| [`demos/env-required-flask`](demos/env-required-flask/) | Flask that hard-requires an env var the manifests never mention | 2 (1 build repair) | HTTP 200, source-code env grep detected `REQUIRED_SECRET` and the LLM added it as `ENV` |
-| [`demos/crashing-route-flask`](demos/crashing-route-flask/) | Flask whose route reads a hard-coded `/etc/...` path not in the repo | 1 | HTTP 200, LLM read `app.py`, spotted the path, added `RUN mkdir -p /etc/autodock && touch /etc/autodock/lookup.txt` to the Dockerfile |
-| [`demos/runtime-loop-fired`](demos/runtime-loop-fired/) | Flask whose route shells out to `pandoc` via `subprocess`, hidden from the analyze step in a sub-package | 1 build + 1 runtime-repair | HTTP 200. Build succeeded; first validation returned 500 because the container could not find `pandoc`. The **runtime-repair loop** read the `FileNotFoundError` from container logs and added `RUN apt-get install -y pandoc`. Second validation passed. |
+| [`jenkins-demo`](demos/jenkins-demo/) | Flask; bind port mismatch (8501 vs EXPOSE 8000) | 1 build + 2 repairs (1 nested) | HTTP 200; `sed` patched port, inner loop fixed `USER` ordering |
+| [`flask`](demos/flask/) | Python + Flask + gunicorn | 1 build repair | HTTP 200 |
+| [`nodejs`](demos/nodejs/) | Node + Express | 1 build repair | HTTP 200 |
+| [`broken-flask`](demos/broken-flask/) | Flask with `flsk` typo in `requirements.txt` | 3 build repairs | HTTP 200; LLM `sed`-patched the typo at build time |
+| [`flask-redis`](demos/flask-redis/) | Flask + Redis multi-service | None needed | HTTP 200; auto-generated `docker-compose.yml` |
+| [`flask-postgres`](demos/flask-postgres/) | Flask + Postgres with `psycopg` | None needed | HTTP 200; compose with `postgres:16` sidecar |
+| [`env-required-flask`](demos/env-required-flask/) | Flask requiring undeclared env var | 1 build repair | HTTP 200; source-code grep detected `REQUIRED_SECRET`, LLM added `ENV` |
+| [`crashing-route-flask`](demos/crashing-route-flask/) | Flask route reads hardcoded `/etc/…` path | None needed | HTTP 200; LLM read `app.py`, spotted the path, added `RUN mkdir` |
+| [`runtime-loop-fired`](demos/runtime-loop-fired/) | Flask shelling out to `pandoc` via subprocess | 1 build + 1 runtime repair | HTTP 200; build OK, validation 500 → LLM read `FileNotFoundError`, added `RUN apt-get install -y pandoc` |
 
-### What the loop actually fixed
+---
 
-In [`demos/flask/attempts/`](demos/flask/attempts/), attempt 0 fails on `chown: invalid group: 'appuser:appuser'` because `adduser --system --no-create-home appuser` on debian-slim doesn't create the group reliably. Attempt 1 replaces those two lines with a correct `addgroup --system` + `adduser --ingroup` pair and builds clean.
+## Installation
 
-In [`demos/broken-flask/attempts/`](demos/broken-flask/attempts/), the winning Dockerfile contains:
+### Prerequisites
 
-```dockerfile
-RUN sed -i 's/flsk/flask/g' requirements.txt
-RUN pip install -r requirements.txt
+- Python 3.10+
+- Docker Engine 20+ (for build + validate stages)
+- Docker Compose v2 (for multi-service repos)
+- A free API key from [Google AI Studio](https://aistudio.google.com) (Gemini) or [Groq](https://console.groq.com) (both free-tier)
+
+### Install
+
+```bash
+git clone https://github.com/MelvinJoshua1375/auto-dock-it.git
+cd auto-dock-it
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -e ".[dev,ui]"
+cp .env.example .env
 ```
 
-The LLM diagnosed the typo from `pip install` output and patched the user's requirements at build time rather than asking a human to fix the repo.
+Open `.env` and paste at least one API key:
 
-## Install and run
+```env
+LLM_PROVIDER=gemini                # or groq
+GEMINI_API_KEY=your_key_here
+# GROQ_API_KEY=your_key_here
+```
+
+Verify everything is wired up:
+
+```bash
+autodock doctor
+```
+
+---
+
+## Quick Start
+
+```bash
+autodock run https://github.com/your-org/your-repo
+```
+
+The pipeline runs end-to-end. Artifacts land in `output/<run_id>/`:
+
+```
+output/
+└── 20260601-143022-abc123/
+    ├── attempts/
+    │   ├── 0-Dockerfile          # first attempt
+    │   ├── 0-build-error.txt     # why it failed
+    │   ├── 1-Dockerfile          # LLM repair
+    │   └── 1-build-success.txt
+    ├── Dockerfile                # winner
+    ├── docker-compose.yml        # if multi-service
+    ├── autodock.yaml             # structured profile
+    ├── usage.json                # token counts + cost estimate
+    └── validation.txt            # HTTP response from the running container
+```
+
+---
+
+## Web UI
+
+```bash
+streamlit run autodock/web.py
+```
+
+Opens at `http://localhost:8501`. Paste a GitHub URL, click **Containerize**, watch the agentic loop run with live log streaming.
+
+The UI includes:
+- **Containerize** — full pipeline with live output
+- **Explain** — line-by-line walkthrough of any Dockerfile
+- **Improve** — prioritized improvement suggestions with diffs
+- **BYOK field** — paste your own Groq or Gemini key to bypass the public demo rate limit
+- **Sample repos** — quick buttons to try Flask, Node, and Go hello-world repos
+- **Light/Dark toggle** — full B&W theme system
+
+---
+
+## CLI Reference
+
+```
+autodock doctor                                  Verify settings, LLM connection, Docker
+autodock run <url-or-path>                       Full pipeline (ingest → validate)
+autodock run <url> --dry-run                     Stop after Dockerfile generation (no Docker needed)
+autodock list                                    Show recent runs with attempt counts and outcomes
+autodock explain <Dockerfile>                    Line-by-line walkthrough of a Dockerfile
+autodock improve <Dockerfile>                    Improvement suggestions with diffs
+autodock pr output/<run_id>                      Fork upstream + open a PR with generated artifacts
+autodock pr output/<run_id> --dry-run            Preview what the PR would look like
+```
+
+URL validation: only `https://github.com/owner/repo` URLs and existing local paths are accepted.
+
+---
+
+## Configuration
+
+All settings are environment variables (read from `.env` at startup):
+
+| Variable | Default | Description |
+|---|---|---|
+| `LLM_PROVIDER` | `gemini` | `gemini` or `groq` |
+| `GEMINI_API_KEY` | — | Google AI Studio key (free tier available) |
+| `GROQ_API_KEY` | — | Groq Console key (generous free tier) |
+| `GEMINI_MODEL_FAST` | `gemini-2.5-flash` | Model for analysis and repair |
+| `GEMINI_MODEL_STRONG` | `gemini-2.5-pro` | Model for complex generation |
+| `GROQ_MODEL_FAST` | `llama-3.3-70b-versatile` | Groq model override |
+| `GROQ_MODEL_STRONG` | `llama-3.3-70b-versatile` | Groq model override |
+| `MAX_BUILD_RETRIES` | `4` | Self-healing loop budget (build stage) |
+| `BUILD_TIMEOUT_SECONDS` | `600` | Per `docker build` timeout |
+| `DOCKER_BIN` | `docker` | Docker binary path or prefix (e.g. `flatpak-spawn --host docker`) |
+| `BUILD_NO_NETWORK` | `0` | Set to `1` to add `--network=none` to every build (for untrusted repos) |
+| `KEEP_RECENT_RUNS` | `20` | Prune old runs in `output/` on each invocation |
+| `AUTODOCK_CACHE_DIR` | `~/.cache/autodock` | Profile cache location |
+
+---
+
+## Deploy Your Own Instance
+
+1. Fork or push this repo to GitHub (public).
+2. Go to [share.streamlit.io](https://share.streamlit.io) → **New app** → select the repo → branch `main` → file `streamlit_app.py`.
+3. **Settings → Secrets** — paste the contents of `.streamlit/secrets.toml.example` with your keys filled in.
+
+> The deployed instance runs in **preview mode** (no Docker daemon on Streamlit Cloud). For the full self-healing loop, run locally or in a Codespace.
+
+---
+
+## Security Notes
+
+- **API keys** live in `.env` (gitignored, chmod 600). On Streamlit Cloud they go in the platform Secrets manager — never committed.
+- **Arbitrary code execution**: `docker build` runs `RUN` commands from the generated Dockerfile in an isolated build environment. You are still effectively running code from a public repo. Only point this at trusted sources, or run it in a throwaway VM / Codespace.
+- **Symlink traversal protection**: the analyze stage refuses to read any file that is a symlink or whose resolved path lies outside the cloned repo directory.
+- **Dockerfile safety scan**: every Dockerfile returned by the LLM is scanned by `assert_safe_dockerfile()` before being written to disk. Rejected patterns: `curl | sh`, `wget | bash`, `nc -e`, `/dev/tcp/`, hardcoded `ENV *_KEY=` / `ENV *_TOKEN=` / `ENV *_PASSWORD=`, `--privileged`.
+- **Multi-user isolation**: the web UI never writes visitor API keys into `os.environ`. Keys are passed per-request through `load_settings(overrides=...)`.
+- All `subprocess.run()` calls use argv-style (never `shell=True`).
+
+---
+
+## Build From Source
 
 ```bash
 git clone https://github.com/MelvinJoshua1375/auto-dock-it.git
@@ -111,122 +302,96 @@ cd auto-dock-it
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev,ui]"
-cp .env.example .env          # paste your Gemini or Groq key
-autodock doctor               # verify
-autodock run https://github.com/<user>/<repo>
-```
 
-Inside a VSCode flatpak terminal, prefix `DOCKER_BIN="flatpak-spawn --host docker"` so the tool talks to the host's Docker daemon.
+# Run tests
+pytest -q
 
-## LLM providers
+# Lint
+ruff check autodock tests
 
-Set `LLM_PROVIDER` in `.env`:
+# Security scan
+bandit -r autodock -ll
 
-| Provider | Free-tier ceiling | Recommended model |
-|---|---|---|
-| `gemini` | 20 requests/day on Flash, 0 on Pro | `gemini-2.5-flash` |
-| `groq` | ~14,000 requests/day | `llama-3.3-70b-versatile` |
-
-The LLM layer handles 429 backoff using the provider's `retry-after` hint, applies a 60-second per-request timeout, and retries once on transient failures.
-
-**Open-source scope.** The Auto-Dock It codebase is MIT licensed and depends only on open-source Python packages (`google-genai`, `groq`, `gitpython`, `pydantic`, `typer`, `rich`, `streamlit`). Gemini and Groq themselves are hosted proprietary model services accessed via free-tier API keys you supply (BYOK). A fully-local backend through Ollama is on the roadmap and would replace the hosted-model dependency for users who require an end-to-end open stack.
-
-## CLI
-
-```
-autodock doctor                                 # smoke-test settings + LLM + Docker
-autodock run <github-url-or-local-path>         # full pipeline
-autodock run <url> --dry-run                    # stop after Dockerfile generation
-autodock list                                   # show recent runs with outcomes
-autodock explain <Dockerfile>                   # line-by-line walkthrough of an existing Dockerfile
-autodock improve <Dockerfile>                   # prioritized improvement suggestions with diffs
-autodock pr output/<run_id>                     # fork upstream and open a PR
-autodock pr output/<run_id> --dry-run           # preview the PR without forking
-```
-
-URL validation: only `https://github.com/owner/repo` and existing local directories are accepted.
-
-## Web UI
-
-```
+# Web UI
 streamlit run autodock/web.py
 ```
 
-Opens at http://localhost:8501. Paste a URL, click Containerize, watch the agentic loop run.
+CI runs ruff, pytest (Python 3.10–3.13), and Bandit on every push.
 
-### Deployed preview at https://auto-dock-it.streamlit.app
+---
 
-Streamlit Cloud containers do not have Docker, so the public deployment runs in **preview mode**: ingest + analyze + generate only. Build, validate, and PR steps need a local Docker daemon.
+## Contributing
 
-To prevent quota abuse on the deployed preview, the UI enforces:
+Contributions are welcome — bug fixes, new LLM backends, demo repos, documentation, and UI improvements.
 
-- 10-second cooldown between runs in one session,
-- 3 runs per browser session,
-- 50 runs per app instance per hour.
+See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the full guide.
 
-These are a circuit breaker, not real authentication. The longer-term fix is bring-your-own-key.
+**Quick steps:**
 
-### Deploy your own
+1. [Fork the repo](https://github.com/MelvinJoshua1375/auto-dock-it/fork)
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Make changes and run `ruff check autodock tests && pytest -q`
+4. Commit with a clear message
+5. Open a pull request
 
-1. Fork or push this repo to your GitHub (public).
-2. Visit https://share.streamlit.io, sign in, **New app**, select the repo, branch `main`, file `streamlit_app.py`.
-3. **Settings → Secrets** → paste contents of [`.streamlit/secrets.toml.example`](.streamlit/secrets.toml.example) with your keys filled in.
+[View open issues](https://github.com/MelvinJoshua1375/auto-dock-it/issues) · [Start a discussion](https://github.com/MelvinJoshua1375/auto-dock-it/discussions)
 
-## Configuration
+---
 
-All knobs are environment variables (read from `.env`):
+## Roadmap
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `LLM_PROVIDER` | `gemini` | `gemini` or `groq` |
-| `GEMINI_API_KEY`, `GROQ_API_KEY` | required | At least one matching the provider |
-| `GEMINI_MODEL_FAST`, `GEMINI_MODEL_STRONG` | 2.5 flash / pro | Override model IDs |
-| `GROQ_MODEL_FAST`, `GROQ_MODEL_STRONG` | llama-3.3-70b | Override model IDs |
-| `MAX_BUILD_RETRIES` | 4 | Self-healing loop budget |
-| `BUILD_TIMEOUT_SECONDS` | 600 | Per `docker build` invocation |
-| `DOCKER_BIN` | `docker` | Prefix the docker binary (eg `flatpak-spawn --host docker`) |
-| `KEEP_RECENT_RUNS` | 20 | Older runs in `output/` are pruned on every new run |
-| `AUTODOCK_CACHE_DIR` | `~/.cache/autodock` | Profile cache location |
+- [x] Self-healing build loop (LLM-driven repair on `docker build` errors)
+- [x] Runtime-repair loop (feeds container logs back on validation failure)
+- [x] Docker Compose support for multi-service repos
+- [x] BYOK (bring-your-own-key) in the Web UI
+- [x] GitHub PR-back command
+- [x] Explain and Improve CLI/UI commands
+- [x] Live cost meter (tokens + estimated USD per run)
+- [x] Streamlit Web UI with B&W theme and live log streaming
+- [ ] Ollama / local LLM backend (fully offline, no API key required)
+- [ ] Sandboxed build preview on the public Streamlit demo
+- [ ] Mermaid diagram in generated `autodock.yaml`
+- [ ] GitHub Actions workflow template output
+- [ ] More demo repos and language coverage (Rust, Elixir, C#, .NET)
+- [ ] VS Code extension (run `autodock` from the command palette)
 
-## Open a PR back to the upstream repo
-
-After a successful `autodock run`, the tool can fork the upstream repo and open a pull request with the generated Dockerfile, `autodock.yaml`, and `docker-compose.yml`.
-
-One-time setup: `gh auth login` (in a host terminal).
-
-```
-autodock pr output/<run_id>                       # opens a real PR
-autodock pr output/<run_id> --dry-run             # prints what it would do
-```
-
-If the upstream is owned by you, the tool skips the fork and pushes the branch directly.
-
-
-## Development
-
-```bash
-pip install -e ".[dev,ui]"
-ruff check autodock tests           # lint
-pytest -q                           # ~101 tests (parametrized), ~5s
-pytest -q --cov=autodock            # with coverage
-```
-
-CI runs ruff, pytest across Python 3.10 - 3.13, and a Bandit security scan on every push. No commit-making automation (Dependabot, pre-commit.ci, release-please) is configured; dependency bumps are reviewed manually.
-
-## Security notes
-
-- API keys live in `.env` (chmod 600, gitignored). On Streamlit Cloud they live in the platform's Secrets manager.
-- `autodock run` clones an arbitrary GitHub repo and runs `docker build` on it. `docker build` executes `RUN` commands from the Dockerfile in an isolated build environment, but you are still effectively running arbitrary code from a stranger's repo. Only point this at trusted sources, or run it in a throwaway VM.
-- Repo URLs are validated against the `github.com` host before any network call.
-- Old runs in `output/` are pruned on each invocation (default keep 20) so the directory doesn't grow unbounded.
-
-## Requirements
-
-- Python 3.10+
-- Docker Engine 20+
-- For multi-service repos: Docker Compose v2 (`sudo apt install docker-compose-v2`)
-- For the PR feature: GitHub CLI (`gh`) authenticated via `gh auth login`
+---
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+Released under the **MIT License**. See [LICENSE](LICENSE) for the full text.
+
+---
+
+## Contact
+
+**Melvin Joshua**
+- Email: [melvinjoshua1001@gmail.com](mailto:melvinjoshua1001@gmail.com?subject=Auto-Dock%20It)
+- GitHub: [@MelvinJoshua1375](https://github.com/MelvinJoshua1375)
+- LinkedIn: [melvin-joshua](https://www.linkedin.com/in/melvin-joshua/)
+
+**Anand Sundaramoorthy SA**
+- Email: [sanand03072005@gmail.com](mailto:sanand03072005@gmail.com?subject=Auto-Dock%20It)
+- GitHub: [@anandsundaramoorthysa](https://github.com/anandsundaramoorthysa)
+- LinkedIn: [anand-sundaramoorthy-sa](https://www.linkedin.com/in/anand-sundaramoorthy-sa-90002a306)
+
+---
+
+## Acknowledgements
+
+Built with these excellent open-source projects:
+
+| Library | Purpose |
+|---|---|
+| [Streamlit](https://github.com/streamlit/streamlit) | Web UI framework |
+| [google-genai](https://github.com/googleapis/python-genai) | Gemini API client |
+| [groq](https://github.com/groq/groq-python) | Groq API client |
+| [GitPython](https://github.com/gitpython-developers/GitPython) | Repository cloning |
+| [Pydantic](https://github.com/pydantic/pydantic) | Structured LLM output validation |
+| [Typer](https://github.com/tiangolo/typer) | CLI framework |
+| [Rich](https://github.com/Textualize/rich) | Terminal output formatting |
+| [Ruff](https://github.com/astral-sh/ruff) | Linting and formatting |
+| [Bandit](https://github.com/PyCQA/bandit) | Security scanning |
+| [pytest](https://github.com/pytest-dev/pytest) | Test framework |
+
+Thanks to the open-source community and everyone who has tested, starred, or contributed to this project.

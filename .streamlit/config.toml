@@ -1,6 +1,12 @@
+# Auto-Dock It — monochrome "dark dashboard" theme.
+# Near-black canvas, crisp white text, restrained grayscale accents.
 [theme]
 base = "dark"
-primaryColor = "#0db7ed"
+primaryColor = "#fafafa"            # restrained near-white accent (buttons, focus)
+backgroundColor = "#0a0a0a"         # near-black main canvas
+secondaryBackgroundColor = "#151515"# panels, sidebar, code blocks
+textColor = "#f5f5f5"               # crisp white primary text
+font = "sans serif"
 
 [server]
 headless = true

@@ -151,7 +151,7 @@ def assert_safe_compose(compose_yaml: str) -> None:
 
 
 def generate_dockerfile(profile: RepoProfile, llm: LLM) -> str:
-    template = (PROMPT_DIR / "dockerfile.md").read_text()
+    template = (PROMPT_DIR / "dockerfile.md").read_text(encoding="utf-8")
     prompt = template.replace("{profile}", profile.model_dump_json(indent=2))
     raw = llm.complete_text(prompt)
     dockerfile = _strip_fences(raw)
@@ -160,7 +160,7 @@ def generate_dockerfile(profile: RepoProfile, llm: LLM) -> str:
 
 
 def generate_repair(profile: RepoProfile, dockerfile: str, error_tail: str, llm: LLM, *, strong: bool = False) -> str:
-    template = (PROMPT_DIR / "repair.md").read_text()
+    template = (PROMPT_DIR / "repair.md").read_text(encoding="utf-8")
     prompt = (
         template
         .replace("{profile}", profile.model_dump_json(indent=2))
@@ -174,7 +174,7 @@ def generate_repair(profile: RepoProfile, dockerfile: str, error_tail: str, llm:
 
 
 def generate_runtime_repair(profile: RepoProfile, dockerfile: str, detail: str, logs: str, llm: LLM) -> str:
-    template = (PROMPT_DIR / "runtime_repair.md").read_text()
+    template = (PROMPT_DIR / "runtime_repair.md").read_text(encoding="utf-8")
     prompt = (
         template
         .replace("{profile}", profile.model_dump_json(indent=2))
@@ -189,7 +189,7 @@ def generate_runtime_repair(profile: RepoProfile, dockerfile: str, detail: str, 
 
 
 def generate_compose(profile: RepoProfile, dockerfile: str, llm: LLM) -> str:
-    template = (PROMPT_DIR / "compose.md").read_text()
+    template = (PROMPT_DIR / "compose.md").read_text(encoding="utf-8")
     prompt = (
         template
         .replace("{profile}", profile.model_dump_json(indent=2))
@@ -202,13 +202,13 @@ def generate_compose(profile: RepoProfile, dockerfile: str, llm: LLM) -> str:
 
 
 def generate_explanation(dockerfile: str, llm: LLM) -> str:
-    template = (PROMPT_DIR / "explain.md").read_text()
+    template = (PROMPT_DIR / "explain.md").read_text(encoding="utf-8")
     prompt = template.replace("{dockerfile}", dockerfile)
     return llm.complete_text(prompt).strip()
 
 
 def generate_improvements(dockerfile: str, llm: LLM) -> str:
-    template = (PROMPT_DIR / "improve.md").read_text()
+    template = (PROMPT_DIR / "improve.md").read_text(encoding="utf-8")
     prompt = template.replace("{dockerfile}", dockerfile)
     return llm.complete_text(prompt).strip()
 

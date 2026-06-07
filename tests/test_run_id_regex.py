@@ -34,7 +34,7 @@ def test_cli_list_regex_matches_both_formats():
 def test_web_output_regex_extracts_both_formats():
     """Streamlit watches stdout for 'output/<run_id>' and resolves the dir."""
     import autodock.web as web_mod
-    src = open(web_mod.__file__).read()
+    src = open(web_mod.__file__, encoding="utf-8").read()
     m = re.search(r"re\.search\((r?\"[^\"]+\"),", src)
     assert m, "could not find compiled output-path regex in web.py"
     pattern = eval(m.group(1))  # noqa: S307
