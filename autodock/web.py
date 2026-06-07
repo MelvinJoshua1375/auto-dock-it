@@ -288,6 +288,58 @@ _CSS_STRUCTURAL = """
   .adi-badge.ok  { color: #aaaaaa; border-color: #383838; background: #1a1a1a; }
   .adi-badge.err { color: #777777; border-color: #2a2a2a; background: #141414; border-style: dashed; }
 
+  /* Polished error card (rendered when the pipeline surfaces a recognizable
+     IngestError such as a private repo or 404). Lives outside the raw log
+     panel so it cannot be lost in a wall of Rich traceback text. */
+  .adi-error-card {
+    margin: 1rem 0 .75rem;
+    padding: 1rem 1.1rem 1rem 1.1rem;
+    border: 1px solid var(--adi-border2);
+    border-left: 3px solid var(--adi-text2);
+    border-radius: 10px;
+    background: var(--adi-surface);
+    color: var(--adi-text);
+  }
+  .adi-error-head {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    margin-bottom: .35rem;
+  }
+  .adi-error-icon {
+    font-size: 22px;
+    line-height: 1;
+    color: var(--adi-text);
+    opacity: .9;
+  }
+  .adi-error-title {
+    font-weight: 700;
+    font-size: 1.02rem;
+    letter-spacing: .005em;
+  }
+  .adi-error-body {
+    color: var(--adi-text);
+    font-size: .96rem;
+    line-height: 1.5;
+    margin: .15rem 0 .65rem;
+  }
+  .adi-error-hints {
+    color: var(--adi-text2);
+    font-size: .9rem;
+    line-height: 1.55;
+    border-top: 1px dashed var(--adi-border2);
+    padding-top: .55rem;
+  }
+  .adi-error-hints strong { color: var(--adi-text); }
+  .adi-error-hints ul { margin: .25rem 0 0 1.1rem; padding: 0; }
+  .adi-error-hints li { margin: .15rem 0; }
+  .adi-error-hints code {
+    background: var(--adi-btn-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: .85em;
+  }
+
   /* Feature pills */
   .adi-pill {
     display: inline-block; padding: 3px 11px; border-radius: 999px;
@@ -1910,6 +1962,56 @@ def _render_containerize(
     else:
         status_container.update(label=f"Pipeline finished: failed (exit {rc})", state="error")
         st.markdown(f'<span class="adi-badge err">FAILED &middot; exit {rc}</span>', unsafe_allow_html=True)
+        # If the failure was a user-facing IngestError (private repo, 404, etc.),
+        # surface it as a polished error card instead of leaving the user to
+        # read the raw Rich traceback. The pipeline writes the IngestError
+        # message to stdout via the autodock CLI's exception handler.
+        _render_friendly_error_if_any(log_lines)
+
+
+_INGEST_ERROR_RE = re.compile(r"IngestError:\s*(.+?)$")
+
+
+def _render_friendly_error_if_any(log_lines: list[str]) -> None:
+    """Scan the captured pipeline output for a recognizable IngestError and
+    render a polished error card. No-op if no friendly error is found."""
+    msg: str | None = None
+    for line in reversed(log_lines):
+        m = _INGEST_ERROR_RE.search(line)
+        if m:
+            msg = m.group(1).strip()
+            break
+    if not msg:
+        return
+
+    is_access = (
+        "private" in msg.lower()
+        or "does not exist" in msg.lower()
+        or "public github repositories" in msg.lower()
+    )
+    title = "Repository not accessible" if is_access else "Could not ingest repository"
+    icon = "lock_person" if is_access else "error"
+
+    st.markdown(
+        f"""
+        <div class="adi-error-card">
+          <div class="adi-error-head">
+            <span class="material-symbols-outlined adi-error-icon">{icon}</span>
+            <span class="adi-error-title">{title}</span>
+          </div>
+          <div class="adi-error-body">{msg}</div>
+          <div class="adi-error-hints">
+            <strong>What to try:</strong>
+            <ul>
+              <li>Confirm the URL opens in an incognito browser tab (no GitHub login).</li>
+              <li>Use one of the <em>Try a sample</em> buttons above for a known-public repo.</li>
+              <li>If this is your own private repo, make it public temporarily or run <code>autodock</code> locally where it can use your git credentials.</li>
+            </ul>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # ── Artifacts ─────────────────────────────────────────────────────────── #
     if last_run_dir and last_run_dir.exists():
