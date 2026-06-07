@@ -443,25 +443,43 @@ _CSS_STRUCTURAL = """
     border-radius: 8px !important;
     transition: background .15s ease, border-color .15s ease !important;
     cursor: pointer !important;
+    /* Force the button into a 32x32 box and centre the injected glyph. */
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    /* Hide any text content Streamlit ships ('<<', ☰, etc) so only the
+       injected ::after glyph is visible. font-size:0 also suppresses inner
+       text nodes that ::after cannot mask. */
+    font-size: 0 !important;
+    color: transparent !important;
   }
   [data-testid="stSidebarCollapseButton"] button:hover,
   button[aria-label="Close sidebar"]:hover {
     background: var(--adi-border) !important;
     border-color: var(--adi-text2) !important;
   }
-  /* Hide default chevron SVG; inject ☰ hamburger via ::after */
-  [data-testid="stSidebarCollapseButton"] button svg,
-  button[aria-label="Close sidebar"] svg {
+  /* Suppress every default child: chevron SVG, hamburger text, inner span. */
+  [data-testid="stSidebarCollapseButton"] button > *,
+  button[aria-label="Close sidebar"] > * {
     display: none !important;
   }
+  /* Inject a single, theme-aware close glyph. Unicode "leftwards single
+     guillemet" (U+2039) reads as "tuck the sidebar away" without the
+     hamburger-vs-chevron ambiguity that produced the double-glyph artifact. */
   [data-testid="stSidebarCollapseButton"] button::after,
   button[aria-label="Close sidebar"]::after {
-    content: '☰';
-    font-size: 18px;
-    color: var(--adi-text2);
-    font-family: system-ui, sans-serif;
-    pointer-events: none;
-    line-height: 1;
+    content: '\2039';
+    font-size: 22px !important;
+    color: var(--adi-text2) !important;
+    font-family: system-ui, sans-serif !important;
+    pointer-events: none !important;
+    line-height: 1 !important;
+    font-weight: 600 !important;
+    transform: translateY(-1px) !important;  /* optical centre */
   }
 
   /* ── Tooltip / help (?) icons — sized, styled, both themes ──────────────── */
@@ -842,10 +860,10 @@ _CSS_LIGHT_OVERRIDES = """
     background-color: var(--adi-surface) !important;
     color: var(--adi-text) !important;
     border: 1.5px solid var(--adi-border2) !important;
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
     padding: 0 !important;
     border-radius: 50% !important;
     display: grid !important;
@@ -875,7 +893,7 @@ _CSS_LIGHT_OVERRIDES = """
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] .material-symbols-outlined,
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] .material-icons,
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] svg {
-    font-size: 20px !important;
+    font-size: 26px !important;
     line-height: 1 !important;
     transform: translateY(1px) !important;
   }
@@ -905,9 +923,9 @@ _CSS_LIGHT_OVERRIDES = """
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > div:has(button[data-testid="stBaseButton-secondary"][aria-describedby*="adi_theme"]),
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > div:has(button[data-testid="stBaseButton-secondary"]) {
     flex: 0 0 auto !important;
-    width: 40px !important;
-    min-width: 40px !important;
-    max-width: 40px !important;
+    width: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
     display: flex !important;
     justify-content: flex-end !important;
     align-items: center !important;
@@ -916,9 +934,9 @@ _CSS_LIGHT_OVERRIDES = """
      otherwise the .stButton wrapper inherits the full column width and the focus
      ring renders as a wide rounded rectangle around an inner round button. */
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] .stButton:has(button[data-testid="stBaseButton-secondary"]) {
-    width: 40px !important;
-    min-width: 40px !important;
-    max-width: 40px !important;
+    width: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
     display: inline-block !important;
   }
 
@@ -1512,7 +1530,7 @@ def render() -> None:
         st.markdown("---")
         st.markdown(
             "**Free API keys:**\n"
-            "- [Groq](https://console.groq.com/keys) — higher daily limit\n"
+            "- [Groq](https://console.groq.com/keys) - higher daily limit\n"
             "- [Gemini](https://aistudio.google.com/apikey)"
         )
 
