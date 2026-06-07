@@ -1,7 +1,30 @@
 [project]
 name = "autodock"
 version = "0.1.0"
-description = "Agentic LLM tool that clones a GitHub repo and generates a working Docker setup"
+description = "Agentic LLM tool that clones a public GitHub repo, profiles its stack, generates a Dockerfile, and self-heals build and runtime failures."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Melvin Joshua", email = "melvinjoshua1001@gmail.com" },
+    { name = "Anand Sundaramoorthy SA", email = "sanand03072005@gmail.com" },
+]
+keywords = ["docker", "dockerfile", "agentic", "llm", "containerization", "devops", "self-healing"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: System :: Installation/Setup",
+    "Topic :: System :: Software Distribution",
+]
 requires-python = ">=3.10"
 dependencies = [
     "google-genai>=1.0.0",
