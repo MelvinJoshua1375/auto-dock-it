@@ -1306,12 +1306,15 @@ def render() -> None:
             unsafe_allow_html=True,
         )
     with col_anim:
-        # hero-ai.json: AI person + robot (File C, colour-remapped to B&W)
-        if not _render_lottie("hero-ai.json", height=230, key="hero_ai"):
-            # fallback: hero-containers or logo
-            if not _render_lottie("hero-containers.json", height=140, key="hero_containers"):
-                if logo_path.exists():
-                    st.image(str(logo_path), width=92)
+        # hero-ai.json: AI person + robot (File C, colour-remapped to B&W).
+        # Fall back to hero-containers, then to the static logo, if a Lottie
+        # asset is missing or fails to render.
+        if (
+            not _render_lottie("hero-ai.json", height=230, key="hero_ai")
+            and not _render_lottie("hero-containers.json", height=140, key="hero_containers")
+            and logo_path.exists()
+        ):
+            st.image(str(logo_path), width=92)
 
     # ── Sidebar ───────────────────────────────────────────────────────────── #
     with st.sidebar:
@@ -1430,6 +1433,7 @@ def _show_llm_result(result: str, kind: str, lottie_key: str) -> None:
     code. `kind` is 'Explanation' or 'Suggestions'. `lottie_key` must be unique.
     """
     import json as _json
+
     import streamlit.components.v1 as _c1
 
     res_col_anim, res_col_text, res_col_copy = st.columns([1, 6, 1], gap="small")
