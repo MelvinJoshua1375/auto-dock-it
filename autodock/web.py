@@ -766,11 +766,46 @@ _CSS_LIGHT_OVERRIDES = """
     border-color: var(--adi-text2) !important;
   }
 
-  /* ── Theme toggle button: round + correct colors in light mode ───────────── */
+  /* ── Theme toggle button: perfect circle + optically centred icon ─────────── */
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] {
     background-color: var(--adi-surface) !important;
     color: var(--adi-text) !important;
     border: 1.5px solid var(--adi-border2) !important;
+    /* perfect circle */
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    /* icon centring (overrides Streamlit's default left-aligned flex layout) */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    /* nudge the column itself flush right so the round button sits beside the logo,
+       not floating in dead space */
+    margin-left: auto !important;
+  }
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] > div,
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] p,
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] span {
+    /* inner wrappers Streamlit injects around the Material icon glyph -- strip their
+       own padding/margin so the glyph itself becomes the bounding box and centres on
+       both axes of the parent flex container. */
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] span[class*="material"],
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] .material-symbols-outlined,
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] .material-icons {
+    font-size: 20px !important;
+    line-height: 1 !important;
+    display: block !important;
   }
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:hover {
     border-color: var(--adi-text2) !important;
@@ -1275,7 +1310,7 @@ def render() -> None:
         menu_items={
             "Get Help": "https://github.com/MelvinJoshua1375/auto-dock-it",
             "Report a bug": "https://github.com/MelvinJoshua1375/auto-dock-it/issues",
-            "About": "Auto-Dock It — LLM-driven Dockerfile generator with a self-healing build loop.",
+            "About": "Auto-Dock It: LLM-driven Dockerfile generator with a self-healing build loop.",
         },
     )
 
@@ -1292,7 +1327,7 @@ def render() -> None:
             '<p style="font-size:1.08rem;line-height:1.6;color:var(--adi-text2);">'
             "Point it at any public GitHub repository and Auto-Dock It infers the "
             "runtime, writes a production-grade Dockerfile, builds it, and "
-            "self-heals through failures — all driven by an LLM."
+            "self-heals through failures, all driven by an LLM."
             "</p>",
             unsafe_allow_html=True,
         )
@@ -1374,7 +1409,7 @@ def render() -> None:
     preview_mode = not _docker_available(docker_bin)
     if preview_mode:
         st.info(
-            "**Preview mode** — Docker is not reachable from this environment. "
+            "**Preview mode.** Docker is not reachable from this environment. "
             "The pipeline will run ingest, analyze, and generate only. "
             "Clone the repo and run `autodock run <url>` locally for the full "
             "self-healing containerization flow."
@@ -1734,7 +1769,7 @@ def _render_containerize(
         _section_header(
             _icon("package"),
             "Containerize a repository",
-            "Point it at a public GitHub repo — it ingests, analyses, generates, and self-heals.",
+            "Point it at a public GitHub repo. It ingests, analyses, generates, and self-heals.",
         )
 
     # Sample quick-start buttons — S9: differentiated with language icons (already set via icon=)
