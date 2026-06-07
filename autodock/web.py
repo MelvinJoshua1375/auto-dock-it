@@ -859,21 +859,12 @@ _CSS_LIGHT_OVERRIDES = """
     border-color: var(--adi-text2) !important;
   }
 
-  /* ── Theme toggle button: SVG-painted icon, mechanically centred ────────────
-     The visible drawing comes from a CSS background-image whose inline SVG
-     viewBox is the exact bounding box of the artwork. `background-position:
-     center` paints it on the optical centre by definition. No font, no
-     baseline, no `:material/...:` glyph metrics involved.
-
-     Scoped to `.st-key-adi_theme_btn` (the Streamlit-injected per-key
-     wrapper class). The button label is a single space; every child the
-     `st.button` widget injects is hidden so only our background-image
-     shows. The two icon variants (sun / moon) are selected by the
-     `aria-label` attribute that Streamlit derives from the `help=` text.
-     ─────────────────────────────────────────────────────────────────── */
+  /* ── Theme toggle button (scoped to its key so it does not bleed onto
+     other secondary buttons). 56x56 round chip on the sidebar top row,
+     balancing the logo on the left. ─────────────────────────────────── */
   [data-testid="stSidebar"] .st-key-adi_theme_btn button {
     background-color: var(--adi-surface) !important;
-    color: transparent !important;
+    color: var(--adi-text) !important;
     border: 1.5px solid var(--adi-border2) !important;
     width: 56px !important;
     height: 56px !important;
@@ -881,34 +872,30 @@ _CSS_LIGHT_OVERRIDES = """
     min-height: 56px !important;
     padding: 0 !important;
     border-radius: 50% !important;
-    display: block !important;
-    line-height: 0 !important;
-    font-size: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    line-height: 1 !important;
     margin-left: auto !important;
     overflow: hidden !important;
-    background-repeat: no-repeat !important;
-    background-position: center center !important;
-    background-size: 28px 28px !important;
   }
-  /* Hide every child Streamlit injects (the empty <p>/<span> for the
-     " " label, any inner span, etc.) so the background-image is the only
-     visible content. */
-  [data-testid="stSidebar"] .st-key-adi_theme_btn button * {
-    display: none !important;
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button *,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button > * {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    display: grid !important;
+    place-items: center !important;
+    text-align: center !important;
+    width: auto !important;
+    height: auto !important;
   }
-  /* Sun icon: painted while the app is in DARK mode. The button click takes
-     the app to LIGHT, so showing the sun-icon-of-the-current-mode is the
-     convention. Stroke `#f5f5f5` reads on the dark sidebar surface.
-     Selector switches on `data-adi-theme` on <html>, set by the inline JS
-     near the bottom of this style sheet. */
-  html[data-adi-theme="dark"] [data-testid="stSidebar"] .st-key-adi_theme_btn button,
-  html:not([data-adi-theme]) [data-testid="stSidebar"] .st-key-adi_theme_btn button {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><path d='M12 2v2'/><path d='M12 20v2'/><path d='m4.93 4.93 1.41 1.41'/><path d='m17.66 17.66 1.41 1.41'/><path d='M2 12h2'/><path d='M20 12h2'/><path d='m6.34 17.66-1.41 1.41'/><path d='m19.07 4.93-1.41 1.41'/></svg>") !important;
-  }
-  /* Moon icon: painted while the app is in LIGHT mode. Stroke `#111` reads
-     on the light sidebar surface. */
-  html[data-adi-theme="light"] [data-testid="stSidebar"] .st-key-adi_theme_btn button {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>") !important;
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button span[class*="material"],
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button .material-symbols-outlined,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button .material-icons,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button svg {
+    font-size: 32px !important;
+    line-height: 1 !important;
+    transform: translateY(1px) !important;
   }
   [data-testid="stSidebar"] .st-key-adi_theme_btn button:hover {
     border-color: var(--adi-text2) !important;
@@ -918,6 +905,7 @@ _CSS_LIGHT_OVERRIDES = """
   [data-testid="stSidebar"] .st-key-adi_theme_btn button:focus-visible,
   [data-testid="stSidebar"] .st-key-adi_theme_btn button:focus-within,
   [data-testid="stSidebar"] .st-key-adi_theme_btn:focus,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn:focus-visible,
   [data-testid="stSidebar"] .st-key-adi_theme_btn:focus-within {
     outline: 0 none transparent !important;
     outline-offset: 0 !important;
@@ -1205,28 +1193,6 @@ def _inject_js() -> None:
     }
   },true);
 
-  /* ── Reflect the current theme as `data-adi-theme` on <html> so CSS can
-     pick the correct theme-toggle SVG (sun in dark mode, moon in light
-     mode). aria-label on the Streamlit button is empty in current versions,
-     so this attribute is the reliable selector signal. */
-  function updateThemeAttr(){
-    var bg=getComputedStyle(document.documentElement)
-      .getPropertyValue('--adi-bg').trim();
-    document.documentElement.setAttribute(
-      'data-adi-theme', bg==='#f8f8f8'?'light':'dark');
-  }
-  updateThemeAttr();
-  /* Re-evaluate whenever the body class changes (Streamlit theme swaps),
-     when a click bubbles up (the toggle was pressed), and on a poll for
-     the first 5 s in case neither event fires. */
-  new MutationObserver(updateThemeAttr).observe(document.body,
-    {attributes:true,attributeFilter:['class','style']});
-  document.addEventListener('click',function(){setTimeout(updateThemeAttr,80);},true);
-  var pollN=0;var pollId=setInterval(function(){
-    updateThemeAttr();
-    if(++pollN>=25)clearInterval(pollId);
-  },200);
-
   /* ── S10: Mobile sidebar overlay backdrop ─────────────────────────────── */
   if(window.innerWidth<=900){
     function ensureBackdrop(){
@@ -1502,24 +1468,11 @@ def render() -> None:
             if logo_path.exists():
                 st.image(str(logo_path), width=44)
         with _toggle_col:
-            # Label is a single space. Streamlit's ":material/...:" shortcode
-            # renders the glyph as a webfont span whose asymmetric baseline
-            # makes the visible icon drift off-centre in a flex/grid container.
-            # Paint the icon ourselves as a CSS background-image (inline SVG)
-            # so the viewBox is the bounding box of the drawing -- centring
-            # is mechanical, no font metrics involved.
-            #
-            # The `help=` text becomes Streamlit's tooltip and lives as
-            # `aria-label` on the button. The CSS below switches the painted
-            # SVG by attribute selector on that aria-label, so we keep the
-            # original singular `key="adi_theme_btn"` (no dual-key DOM churn
-            # while Streamlit Cloud catches up to redeploys).
             _is_light = st.session_state.get("adi_theme_toggle", False)
-            _help = "Switch to dark mode" if _is_light else "Switch to light mode"
             if st.button(
-                " ",
+                ":material/dark_mode:" if _is_light else ":material/light_mode:",
                 key="adi_theme_btn",
-                help=_help,
+                help="Switch to dark mode" if _is_light else "Switch to light mode",
             ):
                 st.session_state["adi_theme_toggle"] = not _is_light
                 st.rerun()
