@@ -859,14 +859,19 @@ _CSS_LIGHT_OVERRIDES = """
     border-color: var(--adi-text2) !important;
   }
 
-  /* ── Theme toggle button: SVG-painted icon, guaranteed pixel-perfect
-     centring. The visible drawing comes from a CSS background-image whose
-     SVG viewBox is the exact bounding box of the artwork, so the bug class
-     "Material font baseline slack + descender padding + place-items
-     centres the box not the glyph" cannot happen. Two scoped rules, one
-     per state key. ───────────────────────────────────────────────────── */
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_light button,
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_dark button {
+  /* ── Theme toggle button: SVG-painted icon, mechanically centred ────────────
+     The visible drawing comes from a CSS background-image whose inline SVG
+     viewBox is the exact bounding box of the artwork. `background-position:
+     center` paints it on the optical centre by definition. No font, no
+     baseline, no `:material/...:` glyph metrics involved.
+
+     Scoped to `.st-key-adi_theme_btn` (the Streamlit-injected per-key
+     wrapper class). The button label is a single space; every child the
+     `st.button` widget injects is hidden so only our background-image
+     shows. The two icon variants (sun / moon) are selected by the
+     `aria-label` attribute that Streamlit derives from the `help=` text.
+     ─────────────────────────────────────────────────────────────────── */
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button {
     background-color: var(--adi-surface) !important;
     color: transparent !important;
     border: 1.5px solid var(--adi-border2) !important;
@@ -886,46 +891,44 @@ _CSS_LIGHT_OVERRIDES = """
     background-size: 28px 28px !important;
   }
   /* Hide every child Streamlit injects (the empty <p>/<span> for the
-     " " label, any focus halo wrappers, etc.) so the background-image is
-     the only visible content. */
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_light button *,
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_dark button * {
+     " " label, any inner span, etc.) so the background-image is the only
+     visible content. */
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button * {
     display: none !important;
   }
-  /* Sun icon (visible in dark mode, click switches to light). #f5f5f5 to
-     read on the dark sidebar surface. The SVG is a 24x24 viewBox so 28 px
-     in the parent gives a 28x28 px rendering, optical-centred by virtue
-     of the viewBox matching the artwork. */
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_light button {
+  /* Sun icon: shown while currently in dark mode (button offers to switch
+     TO light). aria-label is set from `help="Switch to light mode"`. Stroke
+     `#f5f5f5` reads on the dark sidebar surface. SVG viewBox 0 0 24 24. */
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button[aria-label*="light"],
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button[title*="light"] {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><path d='M12 2v2'/><path d='M12 20v2'/><path d='m4.93 4.93 1.41 1.41'/><path d='m17.66 17.66 1.41 1.41'/><path d='M2 12h2'/><path d='M20 12h2'/><path d='m6.34 17.66-1.41 1.41'/><path d='m19.07 4.93-1.41 1.41'/></svg>") !important;
   }
-  /* Moon icon (visible in light mode, click switches to dark). #111 to
-     read on the light sidebar surface. */
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_dark button {
+  /* Moon icon: shown while currently in light mode (button offers to switch
+     TO dark). Stroke `#111` reads on the light sidebar surface. */
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button[aria-label*="dark"],
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button[title*="dark"] {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>") !important;
   }
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_light button:hover,
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_dark button:hover {
+  /* Fallback in case the aria-label hasn't been wired yet (very first paint
+     before Streamlit has injected the tooltip wrapper): default to the sun. */
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button:not([aria-label*="dark"]):not([aria-label*="light"]):not([title*="dark"]):not([title*="light"]) {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><path d='M12 2v2'/><path d='M12 20v2'/><path d='m4.93 4.93 1.41 1.41'/><path d='m17.66 17.66 1.41 1.41'/><path d='M2 12h2'/><path d='M20 12h2'/><path d='m6.34 17.66-1.41 1.41'/><path d='m19.07 4.93-1.41 1.41'/></svg>") !important;
+  }
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button:hover {
     border-color: var(--adi-text2) !important;
   }
   /* Round focus ring + suppress every default outline source. */
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_light button:focus,
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_light button:focus-visible,
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_light button:focus-within,
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_dark button:focus,
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_dark button:focus-visible,
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_dark button:focus-within,
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_light:focus,
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_light:focus-within,
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_dark:focus,
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_dark:focus-within {
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button:focus,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button:focus-visible,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button:focus-within,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn:focus,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn:focus-within {
     outline: 0 none transparent !important;
     outline-offset: 0 !important;
     box-shadow: 0 0 0 2px var(--adi-text2) !important;
     border-color: var(--adi-text) !important;
   }
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_light .stButton,
-  [data-testid="stSidebar"] .st-key-adi_theme_btn_to_dark .stButton {
+  [data-testid="stSidebar"] .st-key-adi_theme_btn .stButton {
     width: 56px !important;
     min-width: 56px !important;
     max-width: 56px !important;
@@ -1481,27 +1484,24 @@ def render() -> None:
             if logo_path.exists():
                 st.image(str(logo_path), width=44)
         with _toggle_col:
-            # The button label is intentionally a single space: Streamlit's
-            # ":material/...:" shortcode renders the glyph as a webfont span
-            # whose baseline metrics include an asymmetric descender slack,
-            # so flex-/grid-centring the span never lands the visible icon
-            # on the optical centre of the round container. Paint the icon
-            # ourselves as a CSS background-image (inline SVG) so the
-            # viewBox is the exact bounding box of the drawing -- guaranteed
-            # pixel-perfect centring regardless of how Streamlit wraps the
-            # button content.
+            # Label is a single space. Streamlit's ":material/...:" shortcode
+            # renders the glyph as a webfont span whose asymmetric baseline
+            # makes the visible icon drift off-centre in a flex/grid container.
+            # Paint the icon ourselves as a CSS background-image (inline SVG)
+            # so the viewBox is the bounding box of the drawing -- centring
+            # is mechanical, no font metrics involved.
             #
-            # Two keys, one per state. CSS down below paints the sun icon on
-            # `adi_theme_btn_to_light` (visible in dark mode, click goes to
-            # light) and the moon icon on `adi_theme_btn_to_dark` (visible
-            # in light mode, click goes to dark). Per-key CSS scoping means
-            # the icons cannot leak onto any other button.
+            # The `help=` text becomes Streamlit's tooltip and lives as
+            # `aria-label` on the button. The CSS below switches the painted
+            # SVG by attribute selector on that aria-label, so we keep the
+            # original singular `key="adi_theme_btn"` (no dual-key DOM churn
+            # while Streamlit Cloud catches up to redeploys).
             _is_light = st.session_state.get("adi_theme_toggle", False)
-            _btn_key = "adi_theme_btn_to_dark" if _is_light else "adi_theme_btn_to_light"
+            _help = "Switch to dark mode" if _is_light else "Switch to light mode"
             if st.button(
                 " ",
-                key=_btn_key,
-                help="Switch to dark mode" if _is_light else "Switch to light mode",
+                key="adi_theme_btn",
+                help=_help,
             ):
                 st.session_state["adi_theme_toggle"] = not _is_light
                 st.rerun()
