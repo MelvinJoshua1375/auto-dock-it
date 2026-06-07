@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 from urllib.parse import urlparse
 
+import requests
 import streamlit as st
 
 from .rate_limit import check_and_record
@@ -1876,6 +1877,29 @@ def _render_containerize(
         st.error("Please paste a valid `https://github.com/<owner>/<repo>` URL.")
         return
 
+    # Pre-flight: bail out BEFORE spinning the pipeline subprocess if the repo
+    # is private, gated, or 404. This puts the polished error card directly
+    # under the Containerize button where a non-technical user will see it
+    # instantly, instead of buried beneath a long Rich traceback in the live
+    # agent log. The check is a 4-second HEAD request to the public GitHub
+    # page; no auth, no API rate-limit risk.
+    access = _check_repo_accessible(repo_url)
+    if access != "ok":
+        if access == "private":
+            msg = (
+                f"{repo_url} is private, gated, or does not exist. "
+                "Auto-Dock It only supports PUBLIC GitHub repositories. "
+                "Try a public repo (for example one of the sample buttons above)."
+            )
+            _render_repo_error_card(msg, kind="private")
+        else:
+            msg = (
+                f"Could not reach {repo_url}. Check the URL and your network, "
+                "then try again."
+            )
+            _render_repo_error_card(msg, kind="network")
+        return
+
     using_own_key = bool(user_key.strip())
 
     if not using_own_key:
@@ -1968,29 +1992,61 @@ def _render_containerize(
         # message to stdout via the autodock CLI's exception handler.
         _render_friendly_error_if_any(log_lines)
 
+    # ── Artifacts ─────────────────────────────────────────────────────────── #
+    if last_run_dir and last_run_dir.exists():
+        _show_artifacts(last_run_dir)
+
 
 _INGEST_ERROR_RE = re.compile(r"IngestError:\s*(.+?)$")
 
 
-def _render_friendly_error_if_any(log_lines: list[str]) -> None:
-    """Scan the captured pipeline output for a recognizable IngestError and
-    render a polished error card. No-op if no friendly error is found."""
-    msg: str | None = None
-    for line in reversed(log_lines):
-        m = _INGEST_ERROR_RE.search(line)
-        if m:
-            msg = m.group(1).strip()
-            break
-    if not msg:
-        return
+def _check_repo_accessible(repo_url: str) -> str:
+    """Return 'ok', 'private', or 'network' for a github.com URL.
 
-    is_access = (
-        "private" in msg.lower()
-        or "does not exist" in msg.lower()
-        or "public github repositories" in msg.lower()
-    )
-    title = "Repository not accessible" if is_access else "Could not ingest repository"
-    icon = "lock_person" if is_access else "error"
+    Issues a 4-second unauthenticated HEAD request against the canonical repo
+    page. GitHub returns 200 for public repos and 404 for private OR missing
+    repos (it does not leak the distinction to anonymous clients, by design).
+    Anything else (timeout, 5xx, connection error) is bucketed as 'network'
+    so we don't lock the user out on a transient blip.
+    """
+    try:
+        r = requests.head(repo_url, timeout=4, allow_redirects=True)
+    except requests.RequestException:
+        return "network"
+    if r.status_code == 200:
+        return "ok"
+    if r.status_code == 404:
+        return "private"
+    return "network"
+
+
+def _render_repo_error_card(msg: str, *, kind: str) -> None:
+    """Render the polished error card under the Containerize button.
+
+    kind:
+      - 'private' : private / 404 repo (Auto-Dock It does not support these)
+      - 'network' : transient reachability problem (network / GitHub 5xx)
+      - 'ingest'  : IngestError surfaced from the running pipeline
+    """
+    if kind == "private":
+        title, icon = "Repository not accessible", "lock_person"
+    elif kind == "network":
+        title, icon = "Could not reach the repository", "cloud_off"
+    else:
+        title, icon = "Could not ingest repository", "error"
+
+    if kind == "network":
+        hints_html = (
+            "<li>Check the URL spelling and that github.com is reachable from your network.</li>"
+            "<li>Wait a few seconds and click Containerize again.</li>"
+            "<li>Try one of the <em>Try a sample</em> buttons above to confirm the pipeline itself is healthy.</li>"
+        )
+    else:
+        hints_html = (
+            "<li>Confirm the URL opens in an incognito browser tab (no GitHub login).</li>"
+            "<li>Use one of the <em>Try a sample</em> buttons above for a known-public repo.</li>"
+            "<li>If this is your own private repo, make it public temporarily or run <code>autodock</code> locally where it can use your git credentials.</li>"
+        )
 
     st.markdown(
         f"""
@@ -2002,20 +2058,33 @@ def _render_friendly_error_if_any(log_lines: list[str]) -> None:
           <div class="adi-error-body">{msg}</div>
           <div class="adi-error-hints">
             <strong>What to try:</strong>
-            <ul>
-              <li>Confirm the URL opens in an incognito browser tab (no GitHub login).</li>
-              <li>Use one of the <em>Try a sample</em> buttons above for a known-public repo.</li>
-              <li>If this is your own private repo, make it public temporarily or run <code>autodock</code> locally where it can use your git credentials.</li>
-            </ul>
+            <ul>{hints_html}</ul>
           </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # ── Artifacts ─────────────────────────────────────────────────────────── #
-    if last_run_dir and last_run_dir.exists():
-        _show_artifacts(last_run_dir)
+
+def _render_friendly_error_if_any(log_lines: list[str]) -> None:
+    """Fallback: if the subprocess still failed with a recognisable IngestError
+    (pre-flight passed but clone failed at runtime, eg. transient 5xx), surface
+    the same polished card. The pre-flight in the containerize handler covers
+    the common cases."""
+    msg: str | None = None
+    for line in reversed(log_lines):
+        m = _INGEST_ERROR_RE.search(line)
+        if m:
+            msg = m.group(1).strip()
+            break
+    if not msg:
+        return
+    low = msg.lower()
+    if "private" in low or "does not exist" in low or "public github repositories" in low:
+        kind = "private"
+    else:
+        kind = "ingest"
+    _render_repo_error_card(msg, kind=kind)
 
 
 if __name__ == "__main__":
