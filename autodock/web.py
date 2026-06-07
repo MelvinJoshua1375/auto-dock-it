@@ -475,12 +475,18 @@ _CSS_STRUCTURAL = """
   [data-testid="stSidebarCollapseButton"] button::after,
   button[aria-label="Close sidebar"]::after {
     content: "×";
-    font-size: 22px !important;
+    font-size: 28px !important;
     color: var(--adi-text2) !important;
     font-family: system-ui, "Segoe UI Symbol", sans-serif !important;
     pointer-events: none !important;
     line-height: 1 !important;
-    font-weight: 500 !important;
+    font-weight: 400 !important;
+    /* The "×" glyph (U+00D7) is positioned on the typographic centre line,
+       not the cap-height centre, so a flex-centred container shows it
+       sitting slightly high. Nudge it down so the visible drawing lands on
+       the optical centre of the 32x32 button. */
+    display: block !important;
+    transform: translateY(-2px) !important;
   }
 
   /* ── Tooltip / help (?) icons — sized, styled, both themes ──────────────── */
@@ -853,31 +859,28 @@ _CSS_LIGHT_OVERRIDES = """
     border-color: var(--adi-text2) !important;
   }
 
-  /* ── Theme toggle button: perfect circle + DOM-agnostic centred icon ──────── */
-  /* The button is a 40x40 grid container with `place-items: center`, so any
-     descendant Streamlit injects -- a div wrapper, a <p>, a Material span, an
-     <svg> -- lands at the geometric centre regardless of the inner markup. */
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] {
+  /* ── Theme toggle button (scoped to its key so it does not bleed onto
+     every secondary button in the sidebar). 32x32 round chip that lives
+     on the right edge of the Settings section header. ───────────────── */
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button {
     background-color: var(--adi-surface) !important;
     color: var(--adi-text) !important;
     border: 1.5px solid var(--adi-border2) !important;
-    width: 56px !important;
-    height: 56px !important;
-    min-width: 56px !important;
-    min-height: 56px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
     padding: 0 !important;
     border-radius: 50% !important;
     display: grid !important;
     place-items: center !important;
     line-height: 1 !important;
-    margin-left: auto !important;
-    overflow: hidden !important;  /* keep stray inner-wrapper edges inside the circle */
+    margin-left: auto !important;  /* push it to the right of the column */
+    margin-top: 2px !important;     /* nudge to vertical-centre with the section title */
+    overflow: hidden !important;
   }
-  /* Every descendant: zero own margin/padding, collapse to its content size,
-     and centre its own children too. Belt-and-braces against future Streamlit
-     wrapper changes. */
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] *,
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] > * {
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button *,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button > * {
     margin: 0 !important;
     padding: 0 !important;
     line-height: 1 !important;
@@ -887,58 +890,35 @@ _CSS_LIGHT_OVERRIDES = """
     width: auto !important;
     height: auto !important;
   }
-  /* Pin the Material glyph itself to a fixed size and nudge it down 1 px for
-     optical centring (baseline metrics include a descender slack the visible
-     drawing does not use). */
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] span[class*="material"],
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] .material-symbols-outlined,
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] .material-icons,
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] svg {
-    font-size: 32px !important;
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button span[class*="material"],
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button .material-symbols-outlined,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button .material-icons,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button svg {
+    font-size: 18px !important;
     line-height: 1 !important;
     transform: translateY(1px) !important;
   }
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:hover {
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button:hover {
     border-color: var(--adi-text2) !important;
   }
-  /* Round focus ring + remove every default outline source (browser default
-     :focus, Streamlit's primary-coloured :focus-visible, OS accent ring). */
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:focus,
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:focus-visible,
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:focus-within {
+  /* Round focus ring + suppress every default outline source. */
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button:focus,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button:focus-visible,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button:focus-within,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn:focus,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn:focus-visible,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn:focus-within {
     outline: 0 none transparent !important;
     outline-offset: 0 !important;
     box-shadow: 0 0 0 2px var(--adi-text2) !important;
     border-color: var(--adi-text) !important;
   }
-  /* Also kill the outline on the .stButton wrapper, which Streamlit sometimes
-     receives :focus-within and re-paints with its primary outline. */
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] .stButton:focus,
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] .stButton:focus-within,
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] .stButton:focus-visible {
-    outline: 0 none transparent !important;
-    box-shadow: none !important;
-  }
-  /* Make the parent column hug the round button so the focus ring stays round
-     instead of stretching across the column's full width. */
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > div:has(button[data-testid="stBaseButton-secondary"][aria-describedby*="adi_theme"]),
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] > div:has(button[data-testid="stBaseButton-secondary"]) {
-    flex: 0 0 auto !important;
-    width: 56px !important;
-    min-width: 56px !important;
-    max-width: 56px !important;
-    display: flex !important;
-    justify-content: flex-end !important;
-    align-items: center !important;
-  }
-  /* Wrapper Streamlit injects directly inside the column also needs to collapse,
-     otherwise the .stButton wrapper inherits the full column width and the focus
-     ring renders as a wide rounded rectangle around an inner round button. */
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] .stButton:has(button[data-testid="stBaseButton-secondary"]) {
-    width: 56px !important;
-    min-width: 56px !important;
-    max-width: 56px !important;
+  [data-testid="stSidebar"] .st-key-adi_theme_btn .stButton {
+    width: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
     display: inline-block !important;
+    margin-left: auto !important;
   }
 
   /* ── Question mark / tooltip icons — force visible in light mode ──────────
@@ -1483,11 +1463,20 @@ def render() -> None:
 
     # ── Sidebar ───────────────────────────────────────────────────────────── #
     with st.sidebar:
-        # Top row: logo (left) + round theme-toggle button (right).
-        _logo_col, _toggle_col = st.columns([4, 1])
-        with _logo_col:
-            if logo_path.exists():
-                st.image(str(logo_path), width=44)
+        # Logo gets its own row so the toggle can live inside the Settings
+        # section header below.
+        if logo_path.exists():
+            st.image(str(logo_path), width=44)
+
+        st.markdown("---")
+
+        # Settings section header + theme toggle, side by side. The toggle
+        # sits on the right edge of the section header (Option B layout) so
+        # it stays tightly coupled to the Settings concept and out of the
+        # logo area.
+        _settings_col, _toggle_col = st.columns([5, 1])
+        with _settings_col:
+            _section_header(_icon("settings"), "Settings", "Provider, keys, Docker binary.")
         with _toggle_col:
             _is_light = st.session_state.get("adi_theme_toggle", False)
             if st.button(
@@ -1497,10 +1486,6 @@ def render() -> None:
             ):
                 st.session_state["adi_theme_toggle"] = not _is_light
                 st.rerun()
-
-        st.markdown("---")
-
-        _section_header(_icon("settings"), "Settings", "Provider, keys, Docker binary.")
 
         provider_choice = st.selectbox(
             "LLM provider",
