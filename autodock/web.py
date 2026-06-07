@@ -889,13 +889,26 @@ _CSS_LIGHT_OVERRIDES = """
     width: auto !important;
     height: auto !important;
   }
+  /* Target the actual icon element in the live DOM. Streamlit renders the
+     `:material/light_mode:` shortcode as:
+       <span role="img" aria-label="light_mode icon" style="font-family: Material Symbols Rounded ...">light_mode</span>
+     The span has NO class, so the previous `[class*="material"]` selector
+     missed it entirely and the icon stayed at the inherited 14 px font-size.
+     Match by role + aria-label suffix instead, and add a `body` ancestor
+     to outrank Streamlit's bundled !important rules. */
+  body [data-testid="stSidebar"] .st-key-adi_theme_btn button [role="img"][aria-label$="icon"],
+  body [data-testid="stSidebar"] .st-key-adi_theme_btn button span[role="img"],
   [data-testid="stSidebar"] .st-key-adi_theme_btn button span[class*="material"],
   [data-testid="stSidebar"] .st-key-adi_theme_btn button .material-symbols-outlined,
   [data-testid="stSidebar"] .st-key-adi_theme_btn button .material-icons,
   [data-testid="stSidebar"] .st-key-adi_theme_btn button svg {
-    font-size: 32px !important;
+    font-size: 22px !important;
     line-height: 1 !important;
+    /* 1 px down to pull the visible drawing onto the optical centre of the
+       round container (Material Symbols Rounded fills only the top ~85 %
+       of the em-square). */
     transform: translateY(1px) !important;
+    vertical-align: middle !important;
   }
   [data-testid="stSidebar"] .st-key-adi_theme_btn button:hover {
     border-color: var(--adi-text2) !important;
