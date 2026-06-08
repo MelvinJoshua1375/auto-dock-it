@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/MelvinJoshua1375/auto-dock-it/discussions
     about: Ask questions and share ideas in Discussions
   - name: Live Demo
-    url: https://auto-dock-it.streamlit.app
+    url: https://autodockit.streamlit.app
     about: Try Auto-Dock It in the browser (preview mode, no Docker required)

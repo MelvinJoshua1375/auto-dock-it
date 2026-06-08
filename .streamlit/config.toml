@@ -1,5 +1,9 @@
-# Auto-Dock It — monochrome "dark dashboard" theme.
+# Auto-Dock It - monochrome "dark dashboard" theme.
 # Near-black canvas, crisp white text, restrained grayscale accents.
+# The actual UI styling is enforced via the injected CSS in autodock/web.py;
+# the values here only set Streamlit's framework defaults so that components
+# the CSS does not reach (eg native widgets in some Streamlit versions) still
+# match the palette instead of flashing the default red.
 [theme]
 base = "dark"
 primaryColor = "#fafafa"            # restrained near-white accent (buttons, focus)

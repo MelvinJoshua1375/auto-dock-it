@@ -13,8 +13,8 @@
 
 Email the maintainers directly with the details:
 
-- **Melvin Joshua** — [melvinjoshua1001@gmail.com](mailto:melvinjoshua1001@gmail.com)
-- **Anand Sundaramoorthy SA** — [sanand03072005@gmail.com](mailto:sanand03072005@gmail.com)
+- **Melvin Joshua**: [melvinjoshua1001@gmail.com](mailto:melvinjoshua1001@gmail.com)
+- **Anand Sundaramoorthy SA**: [sanand03072005@gmail.com](mailto:sanand03072005@gmail.com)
 
 Include in your report:
 
@@ -31,18 +31,20 @@ These are known design decisions and mitigations, not vulnerabilities:
 
 ### Arbitrary code execution via `docker build`
 
-`docker build` executes `RUN` instructions from the generated Dockerfile in an isolated build environment. However, the Dockerfile is generated from a public repository you pointed the tool at. Treat this like running `npm install` from an untrusted source — it is sandboxed by Docker, but you are still executing code from a stranger's repo.
+`docker build` executes `RUN` instructions from the generated Dockerfile in an isolated build environment. However, the Dockerfile is generated from a public repository you pointed the tool at. Treat this like running `npm install` from an untrusted source: it is sandboxed by Docker, but you are still executing code from a stranger's repo.
 
 **Mitigation:** Only run against trusted repositories. Set `BUILD_NO_NETWORK=1` to add `--network=none` to every build, limiting outbound network access during the build phase.
 
-### Dockerfile safety scan
+### Dockerfile and Compose safety scans
 
 Every Dockerfile returned by the LLM is scanned by `assert_safe_dockerfile()` before being written to disk. The following patterns are rejected:
 
-- `curl | sh`, `wget | bash`, `curl | bash` — pipe-to-shell patterns
-- `nc -e`, `/dev/tcp/` — reverse-shell patterns
-- Hardcoded `ENV *_KEY=`, `ENV *_TOKEN=`, `ENV *_PASSWORD=` — credential leaks
-- `--privileged` — container privilege escalation
+- `curl | sh`, `wget | bash`, `curl | bash`: pipe-to-shell patterns
+- `nc -e`, `/dev/tcp/`: reverse-shell patterns
+- Hardcoded `ENV *_KEY=`, `ENV *_TOKEN=`, `ENV *_PASSWORD=`: credential leaks
+- `--privileged`: container privilege escalation
+
+Every `docker-compose.yml` is scanned in parallel by `assert_safe_compose()`. It rejects: `privileged: true`, `network_mode/pid/ipc/userns_mode: host`, dangerous `cap_add` (`SYS_ADMIN`, `ALL`, `NET_ADMIN`, `SYS_PTRACE`, `SYS_MODULE`), `security_opt` entries that disable confinement, host bind mounts to sensitive paths (`/var/run/docker.sock`, `/proc`, `/sys`, `/etc`, `/root`, `/home`, `/var/lib/docker`), and any `/dev/*` device passthrough. The scanner runs before `docker compose up` so an injected compose file never reaches the daemon.
 
 ### Symlink traversal protection
 

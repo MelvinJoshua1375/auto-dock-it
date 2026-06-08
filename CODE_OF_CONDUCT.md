@@ -71,6 +71,10 @@ Maintainers will follow these guidelines in determining the consequences for any
 
 **Consequence:** A permanent ban from any sort of public interaction within the community.
 
+## Reporting Channel
+
+Conduct concerns can be raised privately at any of the maintainer contacts listed in the project [README](README.md#contact). Reports are treated confidentially and acted on within seven days of receipt.
+
 ## Attribution
 
 This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 2.1, available at [https://www.contributor-covenant.org/version/2/1/code_of_conduct.html](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html).

@@ -130,10 +130,7 @@ def assert_safe_compose(compose_yaml: str) -> None:
             if "apparmor:unconfined" in low or "seccomp:unconfined" in low or "label=disable" in low:
                 raise UnsafeComposeError(f"security_opt {opt!r} is not allowed", service=name)
         for vol in _as_list(svc.get("volumes")):
-            if isinstance(vol, dict):
-                spec = vol.get("source") or ""
-            else:
-                spec = vol
+            spec = vol.get("source") or "" if isinstance(vol, dict) else vol
             host_path = str(spec).split(":", 1)[0].strip()
             if not host_path or not host_path.startswith("/"):
                 continue
@@ -141,10 +138,7 @@ def assert_safe_compose(compose_yaml: str) -> None:
                 if host_path == bad or host_path.startswith(bad.rstrip("/") + "/"):
                     raise UnsafeComposeError(f"host bind mount {host_path!r} is not allowed", service=name)
         for dev in _as_list(svc.get("devices")):
-            if isinstance(dev, dict):
-                spec = dev.get("source") or ""
-            else:
-                spec = dev
+            spec = dev.get("source") or "" if isinstance(dev, dict) else dev
             host_dev = str(spec).split(":", 1)[0].strip()
             if host_dev.startswith("/dev/"):
                 raise UnsafeComposeError(f"device passthrough {host_dev!r} is not allowed", service=name)

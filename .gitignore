@@ -50,3 +50,10 @@ desktop.ini
 
 # Generated logo variants not used in the repo
 assets/logo-readme.svg
+
+# IDE project files
+.idea/
+.vscode/*.local.json
+
+# Local Codespace SSH key material (never commit)
+.codespaces/

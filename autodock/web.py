@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 from urllib.parse import urlparse
 
+import requests
 import streamlit as st
 
 from .rate_limit import check_and_record
@@ -48,8 +49,12 @@ _CSS_VARS_DARK = """
     --adi-surface:      #111111;
     --adi-sidebar:      #0c0c0c;
     --adi-text:         #f5f5f5;
-    --adi-text2:        #9a9a9a;
-    --adi-muted:        #5f5f5f;
+    --adi-text2:        #b5b5b5;
+    /* WCAG AA at small font sizes (12-14 px) requires a contrast ratio of
+       4.5:1. The previous #5f5f5f gave 3.10 on the near-black background
+       and failed the audit; #9a9a9a clears 7:1 while keeping the muted
+       tone the footer needs. */
+    --adi-muted:        #9a9a9a;
     --adi-border:       #1f1f1f;
     --adi-border2:      #2a2a2a;
     --adi-btn-bg:       #161616;
@@ -75,8 +80,12 @@ _CSS_VARS_LIGHT = """
     --adi-surface:      #ffffff;
     --adi-sidebar:      #efefef;
     --adi-text:         #111111;
-    --adi-text2:        #555555;
-    --adi-muted:        #888888;
+    --adi-text2:        #4a4a4a;
+    /* WCAG AA at small font sizes (12-14 px) requires a contrast ratio of
+       4.5:1. The previous #888888 gave 3.34 on the near-white background
+       and failed the audit; #5a5a5a clears 6:1 while keeping the muted
+       tone the footer needs. */
+    --adi-muted:        #5a5a5a;
     --adi-border:       #e8e8e8;
     --adi-border2:      #d0d0d0;
     --adi-btn-bg:       #ffffff;
@@ -250,6 +259,30 @@ _CSS_STRUCTURAL = """
     border-radius: 12px;
     background: var(--adi-code-bg) !important;
   }
+  /* Strip Pygments per-token backgrounds inside code blocks. In light mode
+     Streamlit ships a syntax theme that paints individual tokens
+     (`FROM`, `RUN`, language keywords) with a near-white inline
+     background-color, which renders as a series of disconnected white
+     chips floating inside our dark code panel. The container background
+     is owned by `--adi-code-bg`; the per-token chips need to be
+     transparent so the code reads as a single dark surface. */
+  div[data-testid="stCodeBlock"] pre,
+  div[data-testid="stCodeBlock"] pre code,
+  div[data-testid="stCodeBlock"] pre code *,
+  div[data-testid="stCodeBlock"] pre span,
+  div[data-testid="stCodeBlock"] code span {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
+  /* The live log panel uses `st.code(...)` with a plain language, which
+     ships as a `<pre>` inside the same `stCodeBlock` wrapper. Some
+     versions of Streamlit additionally wrap each line in a `<div>` with
+     its own background; flatten that too. */
+  div[data-testid="stCodeBlock"] pre > div,
+  div[data-testid="stCodeBlock"] pre > p {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
 
   /* Sidebar */
   section[data-testid="stSidebar"] {
@@ -294,6 +327,58 @@ _CSS_STRUCTURAL = """
   }
   .adi-badge.ok  { color: #aaaaaa; border-color: #383838; background: #1a1a1a; }
   .adi-badge.err { color: #777777; border-color: #2a2a2a; background: #141414; border-style: dashed; }
+
+  /* Polished error card (rendered when the pipeline surfaces a recognizable
+     IngestError such as a private repo or 404). Lives outside the raw log
+     panel so it cannot be lost in a wall of Rich traceback text. */
+  .adi-error-card {
+    margin: 1rem 0 .75rem;
+    padding: 1rem 1.1rem 1rem 1.1rem;
+    border: 1px solid var(--adi-border2);
+    border-left: 3px solid var(--adi-text2);
+    border-radius: 10px;
+    background: var(--adi-surface);
+    color: var(--adi-text);
+  }
+  .adi-error-head {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    margin-bottom: .35rem;
+  }
+  .adi-error-icon {
+    font-size: 22px;
+    line-height: 1;
+    color: var(--adi-text);
+    opacity: .9;
+  }
+  .adi-error-title {
+    font-weight: 700;
+    font-size: 1.02rem;
+    letter-spacing: .005em;
+  }
+  .adi-error-body {
+    color: var(--adi-text);
+    font-size: .96rem;
+    line-height: 1.5;
+    margin: .15rem 0 .65rem;
+  }
+  .adi-error-hints {
+    color: var(--adi-text2);
+    font-size: .9rem;
+    line-height: 1.55;
+    border-top: 1px dashed var(--adi-border2);
+    padding-top: .55rem;
+  }
+  .adi-error-hints strong { color: var(--adi-text); }
+  .adi-error-hints ul { margin: .25rem 0 0 1.1rem; padding: 0; }
+  .adi-error-hints li { margin: .15rem 0; }
+  .adi-error-hints code {
+    background: var(--adi-btn-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: .85em;
+  }
 
   /* Feature pills */
   .adi-pill {
@@ -397,25 +482,50 @@ _CSS_STRUCTURAL = """
     border-radius: 8px !important;
     transition: background .15s ease, border-color .15s ease !important;
     cursor: pointer !important;
+    /* Force the button into a 32x32 box and centre the injected glyph. */
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    /* Hide any text content Streamlit ships ('<<', ☰, etc) so only the
+       injected ::after glyph is visible. font-size:0 also suppresses inner
+       text nodes that ::after cannot mask. */
+    font-size: 0 !important;
+    color: transparent !important;
   }
   [data-testid="stSidebarCollapseButton"] button:hover,
   button[aria-label="Close sidebar"]:hover {
     background: var(--adi-border) !important;
     border-color: var(--adi-text2) !important;
   }
-  /* Hide default chevron SVG; inject ☰ hamburger via ::after */
-  [data-testid="stSidebarCollapseButton"] button svg,
-  button[aria-label="Close sidebar"] svg {
+  /* Suppress every default child: chevron SVG, hamburger text, inner span. */
+  [data-testid="stSidebarCollapseButton"] button > *,
+  button[aria-label="Close sidebar"] > * {
     display: none !important;
   }
+  /* Inject a single close glyph using a literal Unicode character (no CSS
+     hex escape). The previous `\2039` escape was being parsed in a way that
+     left "9" visible as text in the deployed build. Multiplication sign
+     (U+00D7) reads as "close" and is guaranteed to render in every system
+     font's fallback chain. */
   [data-testid="stSidebarCollapseButton"] button::after,
   button[aria-label="Close sidebar"]::after {
-    content: '☰';
-    font-size: 18px;
-    color: var(--adi-text2);
-    font-family: system-ui, sans-serif;
-    pointer-events: none;
-    line-height: 1;
+    content: "×";
+    font-size: 28px !important;
+    color: var(--adi-text2) !important;
+    font-family: system-ui, "Segoe UI Symbol", sans-serif !important;
+    pointer-events: none !important;
+    line-height: 1 !important;
+    font-weight: 400 !important;
+    /* The "×" glyph (U+00D7) is positioned on the typographic centre line,
+       not the cap-height centre, so a flex-centred container shows it
+       sitting slightly high. Nudge it down so the visible drawing lands on
+       the optical centre of the 32x32 button. */
+    display: block !important;
+    transform: translateY(-2px) !important;
   }
 
   /* ── Tooltip / help (?) icons — sized, styled, both themes ──────────────── */
@@ -746,19 +856,53 @@ _CSS_LIGHT_OVERRIDES = """
   }
 
   /* ── Fix: Primary button text visibility (all states including disabled) ─── */
-  .stButton > button[kind="primary"],
-  .stButton > button[kind="primary"]:hover,
-  .stButton > button[kind="primary"]:focus,
-  .stButton > button[kind="primary"]:active,
-  .stButton > button[kind="primary"][disabled] {
+  /* Includes the form-submit variant: when the primary button lives inside
+     st.form(...) it ships as .stFormSubmitButton, NOT .stButton, so previous
+     rules silently fell through and produced white text on the white pill. */
+  /* Streamlit's form submit ships as `kind="primaryFormSubmit"`, NOT
+     `kind="primary"`. The earlier selectors that scoped on
+     `[kind="primary"]` matched nothing and the deployed Containerize
+     button rendered as white-on-white (effectively invisible). Match the
+     submit button on its real attributes and use a `body` ancestor to
+     outrank Streamlit's bundled !important rules that set `color:
+     rgba(245,245,245,0.4)` on disabled and `background-color: transparent`
+     across the board. */
+  body .stButton > button[kind="primary"],
+  body .stButton > button[kind="primary"]:hover,
+  body .stButton > button[kind="primary"]:focus,
+  body .stButton > button[kind="primary"]:active,
+  body .stButton > button[kind="primary"][disabled],
+  body .stFormSubmitButton > button,
+  body .stFormSubmitButton > button:hover,
+  body .stFormSubmitButton > button:focus,
+  body .stFormSubmitButton > button:active,
+  body .stFormSubmitButton > button[disabled],
+  body [data-testid="stFormSubmitButton"] button,
+  body button[data-testid="stBaseButton-primaryFormSubmit"],
+  body button[kind="primaryFormSubmit"] {
     background-color: var(--adi-primary-bg) !important;
     color: var(--adi-primary-text) !important;
     border-color: var(--adi-primary-bg) !important;
   }
-  .stButton > button[kind="primary"] p,
-  .stButton > button[kind="primary"] span,
-  .stButton > button[kind="primary"] * {
+  body .stButton > button[kind="primary"] p,
+  body .stButton > button[kind="primary"] span,
+  body .stButton > button[kind="primary"] *,
+  body .stFormSubmitButton > button p,
+  body .stFormSubmitButton > button span,
+  body .stFormSubmitButton > button *,
+  body [data-testid="stFormSubmitButton"] button *,
+  body button[data-testid="stBaseButton-primaryFormSubmit"] *,
+  body button[kind="primaryFormSubmit"] * {
     color: var(--adi-primary-text) !important;
+  }
+  /* Disabled state: keep the dark-on-white contrast, just dim to 55% so
+     the affordance is obvious without hiding the label entirely. */
+  body button[data-testid="stBaseButton-primaryFormSubmit"][disabled],
+  body button[kind="primaryFormSubmit"][disabled],
+  body button[data-testid="stBaseButton-primaryFormSubmit"][disabled] *,
+  body button[kind="primaryFormSubmit"][disabled] * {
+    opacity: 0.55 !important;
+    cursor: not-allowed !important;
   }
 
   /* ── Fix: Placeholder text visibility in inputs ──────────────────────── */
@@ -793,14 +937,78 @@ _CSS_LIGHT_OVERRIDES = """
     border-color: var(--adi-text2) !important;
   }
 
-  /* ── Theme toggle button: round + correct colors in light mode ───────────── */
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] {
+  /* ── Theme toggle button (scoped to its key so it does not bleed onto
+     other secondary buttons). 56x56 round chip on the sidebar top row,
+     balancing the logo on the left. ─────────────────────────────────── */
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button {
     background-color: var(--adi-surface) !important;
     color: var(--adi-text) !important;
     border: 1.5px solid var(--adi-border2) !important;
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: grid !important;
+    place-items: center !important;
+    line-height: 1 !important;
+    margin-left: auto !important;
+    overflow: hidden !important;
   }
-  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"]:hover {
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button *,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button > * {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    display: grid !important;
+    place-items: center !important;
+    text-align: center !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  /* Target the actual icon element in the live DOM. Streamlit renders the
+     `:material/light_mode:` shortcode as:
+       <span role="img" aria-label="light_mode icon" style="font-family: Material Symbols Rounded ...">light_mode</span>
+     The span has NO class, so the previous `[class*="material"]` selector
+     missed it entirely and the icon stayed at the inherited 14 px font-size.
+     Match by role + aria-label suffix instead, and add a `body` ancestor
+     to outrank Streamlit's bundled !important rules. */
+  body [data-testid="stSidebar"] .st-key-adi_theme_btn button [role="img"][aria-label$="icon"],
+  body [data-testid="stSidebar"] .st-key-adi_theme_btn button span[role="img"],
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button span[class*="material"],
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button .material-symbols-outlined,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button .material-icons,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button svg {
+    font-size: 22px !important;
+    line-height: 1 !important;
+    /* 1 px down to pull the visible drawing onto the optical centre of the
+       round container (Material Symbols Rounded fills only the top ~85 %
+       of the em-square). */
+    transform: translateY(1px) !important;
+    vertical-align: middle !important;
+  }
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button:hover {
     border-color: var(--adi-text2) !important;
+  }
+  /* Round focus ring + suppress every default outline source. */
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button:focus,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button:focus-visible,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn button:focus-within,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn:focus,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn:focus-visible,
+  [data-testid="stSidebar"] .st-key-adi_theme_btn:focus-within {
+    outline: 0 none transparent !important;
+    outline-offset: 0 !important;
+    box-shadow: 0 0 0 2px var(--adi-text2) !important;
+    border-color: var(--adi-text) !important;
+  }
+  [data-testid="stSidebar"] .st-key-adi_theme_btn .stButton {
+    width: 56px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
+    display: inline-block !important;
+    margin-left: auto !important;
   }
 
   /* ── Question mark / tooltip icons — force visible in light mode ──────────
@@ -1302,7 +1510,7 @@ def render() -> None:
         menu_items={
             "Get Help": "https://github.com/MelvinJoshua1375/auto-dock-it",
             "Report a bug": "https://github.com/MelvinJoshua1375/auto-dock-it/issues",
-            "About": "Auto-Dock It — LLM-driven Dockerfile generator with a self-healing build loop.",
+            "About": "Auto-Dock It: LLM-driven Dockerfile generator with a self-healing build loop.",
         },
     )
 
@@ -1319,7 +1527,7 @@ def render() -> None:
             '<p style="font-size:1.08rem;line-height:1.6;color:var(--adi-text2);">'
             "Point it at any public GitHub repository and Auto-Dock It infers the "
             "runtime, writes a production-grade Dockerfile, builds it, and "
-            "self-heals through failures — all driven by an LLM."
+            "self-heals through failures - all driven by an LLM."
             "</p>",
             unsafe_allow_html=True,
         )
@@ -1333,12 +1541,15 @@ def render() -> None:
             unsafe_allow_html=True,
         )
     with col_anim:
-        # hero-ai.json: AI person + robot (File C, colour-remapped to B&W)
-        if not _render_lottie("hero-ai.json", height=230, key="hero_ai"):
-            # fallback: hero-containers or logo
-            if not _render_lottie("hero-containers.json", height=140, key="hero_containers"):
-                if logo_path.exists():
-                    st.image(str(logo_path), width=92)
+        # hero-ai.json: AI person + robot (File C, colour-remapped to B&W).
+        # Fall back to hero-containers, then to the static logo, if a Lottie
+        # asset is missing or fails to render.
+        if (
+            not _render_lottie("hero-ai.json", height=230, key="hero_ai")
+            and not _render_lottie("hero-containers.json", height=140, key="hero_containers")
+            and logo_path.exists()
+        ):
+            st.image(str(logo_path), width=92)
 
     # ── Sidebar ───────────────────────────────────────────────────────────── #
     with st.sidebar:
@@ -1390,7 +1601,7 @@ def render() -> None:
         st.markdown("---")
         st.markdown(
             "**Free API keys:**\n"
-            "- [Groq](https://console.groq.com/keys) — higher daily limit\n"
+            "- [Groq](https://console.groq.com/keys) - higher daily limit\n"
             "- [Gemini](https://aistudio.google.com/apikey)"
         )
 
@@ -1398,7 +1609,7 @@ def render() -> None:
     preview_mode = not _docker_available(docker_bin)
     if preview_mode:
         st.info(
-            "**Preview mode** — Docker is not reachable from this environment. "
+            "**Preview mode** - Docker is not reachable from this environment. "
             "The pipeline will run ingest, analyze, and generate only. "
             "Clone the repo and run `autodock run <url>` locally for the full "
             "self-healing containerization flow."
@@ -1457,6 +1668,7 @@ def _show_llm_result(result: str, kind: str, lottie_key: str) -> None:
     code. `kind` is 'Explanation' or 'Suggestions'. `lottie_key` must be unique.
     """
     import json as _json
+
     import streamlit.components.v1 as _c1
 
     res_col_anim, res_col_text, res_col_copy = st.columns([1, 6, 1], gap="small")
@@ -1744,8 +1956,12 @@ def _render_containerize(
         ("Go hello",      "https://github.com/heroku/go-getting-started",           ":material/code:"),
     ]
 
-    if "repo_url_value" not in st.session_state:
-        st.session_state.repo_url_value = ""
+    # The text_input below owns `repo_url_input` once it's rendered, so the sample
+    # buttons must write to that same key (NOT a separate mirror). Streamlit silently
+    # ignores the `value=` kwarg on a keyed widget on subsequent reruns, so writing
+    # to a different key would never propagate into the input.
+    if "repo_url_input" not in st.session_state:
+        st.session_state.repo_url_input = ""
     if "adi_last_result" not in st.session_state:
         st.session_state.adi_last_result = None
 
@@ -1757,7 +1973,7 @@ def _render_containerize(
         _section_header(
             _icon("package"),
             "Containerize a repository",
-            "Point it at a public GitHub repo — it ingests, analyses, generates, and self-heals.",
+            "Point it at a public GitHub repo - it ingests, analyses, generates, and self-heals.",
         )
 
     # Sample quick-start buttons — S9: differentiated with language icons (already set via icon=)
@@ -1765,37 +1981,42 @@ def _render_containerize(
     sample_cols = st.columns(len(SAMPLE_REPOS))
     for col, (label, url, icon) in zip(sample_cols, SAMPLE_REPOS, strict=True):
         if col.button(label, key=f"sample-{label}", icon=icon, use_container_width=True):
-            st.session_state.repo_url_value = url
+            st.session_state.repo_url_input = url
+            st.rerun()
 
-    repo_url = st.text_input(
-        "GitHub repository URL",
-        value=st.session_state.repo_url_value,
-        placeholder="https://github.com/user/repo",
-        key="repo_url_input",
-    )
+    # Wrap the URL input and the Containerize button in a form so pressing Enter
+    # while focused on the input submits the form (Streamlit's default form
+    # behaviour). The sample quick-start buttons stay OUTSIDE the form because
+    # they only need to write to session_state, not kick off a run.
+    with st.form("adi_containerize_form", clear_on_submit=False, border=False):
+        repo_url = st.text_input(
+            "GitHub repository URL",
+            placeholder="https://github.com/user/repo",
+            key="repo_url_input",
+        )
 
-    # S2: Inline URL validation feedback — shows ✓ / ✗ as user types
-    if repo_url.strip():
-        if _valid_github_url(repo_url.strip()):
-            st.markdown(
-                '<span class="adi-url-ok">✓ Valid GitHub URL</span>',
-                unsafe_allow_html=True,
-            )
-        else:
-            st.markdown(
-                '<span class="adi-url-err">✗ Enter a https://github.com/owner/repo URL</span>',
-                unsafe_allow_html=True,
-            )
+        # S2: Inline URL validation feedback — shows OK / NOT-OK as user types
+        if repo_url.strip():
+            if _valid_github_url(repo_url.strip()):
+                st.markdown(
+                    '<span class="adi-url-ok">Valid GitHub URL</span>',
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    '<span class="adi-url-err">Enter a https://github.com/owner/repo URL</span>',
+                    unsafe_allow_html=True,
+                )
 
-    go = st.button(
-        ":material/rocket_launch:  Containerize",
-        type="primary",
-        disabled=not repo_url,
-        use_container_width=True,
-    )
+        go = st.form_submit_button(
+            ":material/rocket_launch:  Containerize",
+            type="primary",
+            disabled=not repo_url,
+            use_container_width=True,
+        )
     # S4: Keyboard hint
     if not repo_url:
-        st.caption("Paste a GitHub URL above, then press **Ctrl+Enter** or click Containerize.")
+        st.caption("Paste a GitHub URL above and press **Enter**, or click Containerize.")
 
     if not go:
         # Show the last pipeline result if one exists so artifacts persist
@@ -1806,6 +2027,29 @@ def _render_containerize(
 
     if not _valid_github_url(repo_url):
         st.error("Please paste a valid `https://github.com/<owner>/<repo>` URL.")
+        return
+
+    # Pre-flight: bail out BEFORE spinning the pipeline subprocess if the repo
+    # is private, gated, or 404. This puts the polished error card directly
+    # under the Containerize button where a non-technical user will see it
+    # instantly, instead of buried beneath a long Rich traceback in the live
+    # agent log. The check is a 4-second HEAD request to the public GitHub
+    # page; no auth, no API rate-limit risk.
+    access = _check_repo_accessible(repo_url)
+    if access != "ok":
+        if access == "private":
+            msg = (
+                f"{repo_url} is private, gated, or does not exist. "
+                "Auto-Dock It only supports PUBLIC GitHub repositories. "
+                "Try a public repo (for example one of the sample buttons above)."
+            )
+            _render_repo_error_card(msg, kind="private")
+        else:
+            msg = (
+                f"Could not reach {repo_url}. Check the URL and your network, "
+                "then try again."
+            )
+            _render_repo_error_card(msg, kind="network")
         return
 
     using_own_key = bool(user_key.strip())
@@ -1894,10 +2138,105 @@ def _render_containerize(
     else:
         status_container.update(label=f"Pipeline finished: failed (exit {rc})", state="error")
         st.markdown(f'<span class="adi-badge err">FAILED &middot; exit {rc}</span>', unsafe_allow_html=True)
+        # If the failure was a user-facing IngestError (private repo, 404, etc.),
+        # surface it as a polished error card instead of leaving the user to
+        # read the raw Rich traceback. The pipeline writes the IngestError
+        # message to stdout via the autodock CLI's exception handler.
+        _render_friendly_error_if_any(log_lines)
 
     # ── Artifacts ─────────────────────────────────────────────────────────── #
     if last_run_dir and last_run_dir.exists():
         _show_artifacts(last_run_dir)
+
+
+_INGEST_ERROR_RE = re.compile(r"IngestError:\s*(.+?)$")
+
+
+def _check_repo_accessible(repo_url: str) -> str:
+    """Return 'ok', 'private', or 'network' for a github.com URL.
+
+    Issues a 4-second unauthenticated HEAD request against the canonical repo
+    page. GitHub returns 200 for public repos and 404 for private OR missing
+    repos (it does not leak the distinction to anonymous clients, by design).
+    Anything else (timeout, 5xx, connection error) is bucketed as 'network'
+    so we don't lock the user out on a transient blip.
+    """
+    try:
+        r = requests.head(repo_url, timeout=4, allow_redirects=True)
+    except requests.RequestException:
+        return "network"
+    if r.status_code == 200:
+        return "ok"
+    if r.status_code == 404:
+        return "private"
+    return "network"
+
+
+def _render_repo_error_card(msg: str, *, kind: str) -> None:
+    """Render the polished error card under the Containerize button.
+
+    kind:
+      - 'private' : private / 404 repo (Auto-Dock It does not support these)
+      - 'network' : transient reachability problem (network / GitHub 5xx)
+      - 'ingest'  : IngestError surfaced from the running pipeline
+    """
+    if kind == "private":
+        title, icon = "Repository not accessible", "lock_person"
+    elif kind == "network":
+        title, icon = "Could not reach the repository", "cloud_off"
+    else:
+        title, icon = "Could not ingest repository", "error"
+
+    if kind == "network":
+        hints_html = (
+            "<li>Check the URL spelling and that github.com is reachable from your network.</li>"
+            "<li>Wait a few seconds and click Containerize again.</li>"
+            "<li>Try one of the <em>Try a sample</em> buttons above to confirm the pipeline itself is healthy.</li>"
+        )
+    else:
+        hints_html = (
+            "<li>Confirm the URL opens in an incognito browser tab (no GitHub login).</li>"
+            "<li>Use one of the <em>Try a sample</em> buttons above for a known-public repo.</li>"
+            "<li>If this is your own private repo, make it public temporarily or run <code>autodock</code> locally where it can use your git credentials.</li>"
+        )
+
+    st.markdown(
+        f"""
+        <div class="adi-error-card">
+          <div class="adi-error-head">
+            <span class="material-symbols-outlined adi-error-icon">{icon}</span>
+            <span class="adi-error-title">{title}</span>
+          </div>
+          <div class="adi-error-body">{msg}</div>
+          <div class="adi-error-hints">
+            <strong>What to try:</strong>
+            <ul>{hints_html}</ul>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_friendly_error_if_any(log_lines: list[str]) -> None:
+    """Fallback: if the subprocess still failed with a recognisable IngestError
+    (pre-flight passed but clone failed at runtime, eg. transient 5xx), surface
+    the same polished card. The pre-flight in the containerize handler covers
+    the common cases."""
+    msg: str | None = None
+    for line in reversed(log_lines):
+        m = _INGEST_ERROR_RE.search(line)
+        if m:
+            msg = m.group(1).strip()
+            break
+    if not msg:
+        return
+    low = msg.lower()
+    if "private" in low or "does not exist" in low or "public github repositories" in low:
+        kind = "private"
+    else:
+        kind = "ingest"
+    _render_repo_error_card(msg, kind=kind)
 
 
 if __name__ == "__main__":
