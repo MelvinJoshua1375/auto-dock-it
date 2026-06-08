@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="Auto-Dock It" width="110" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)"  srcset="assets/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/logo.svg">
+    <img src="assets/logo.svg" alt="Auto-Dock It" width="110" />
+  </picture>
 </p>
 
 <h1 align="center">Auto-Dock It</h1>

@@ -47,3 +47,6 @@ desktop.ini
 # Editor temp files
 *.swp
 *~
+
+# Generated logo variants not used in the repo
+assets/logo-readme.svg

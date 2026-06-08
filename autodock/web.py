@@ -120,6 +120,13 @@ _CSS_STRUCTURAL = """
     color: var(--adi-primary-text) !important;
     border-color: var(--adi-primary-bg) !important;
   }
+  /* Force the colour onto every inner <p>/<span> too — Streamlit dark-mode CSS
+     overrides child-element text to white; this wins in both themes. */
+  .stButton > button[kind="primary"] p,
+  .stButton > button[kind="primary"] span,
+  .stButton > button[kind="primary"] * {
+    color: var(--adi-primary-text) !important;
+  }
   .stButton > button[kind="primary"]:hover { filter: brightness(1.08); }
 
   .stDownloadButton > button {
@@ -453,6 +460,17 @@ _CSS_STRUCTURAL = """
     font-size: 1.1rem !important;
     flex-shrink: 0 !important;
   }
+  /* Zero out every inner wrapper so the button's own flex-centre actually lands
+     on the icon. Without this, <p>/<div> default margins shift the icon off-centre. */
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] *,
+  [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] .stButton > button * {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] span[role="img"],
   [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] button[data-testid="stBaseButton-secondary"] svg {
     width: 18px !important;
@@ -526,6 +544,15 @@ _CSS_STRUCTURAL = """
     border: none !important;
     background: transparent !important;
     color: var(--adi-text) !important;
+  }
+
+  /* ── Sidebar horizontal-rule dividers (st.markdown "---") ───────────────────
+     Streamlit dark-theme styles <hr> as near-transparent white — invisible on
+     the light sidebar (#efefef). Override for both themes via --adi-border2.   */
+  [data-testid="stSidebar"] hr {
+    border: none !important;
+    border-top: 1px solid var(--adi-border2) !important;
+    margin: 0.4rem 0 !important;
   }
 
   /* ── Input labels: stable data-testid selectors ─────────────────────────── */
