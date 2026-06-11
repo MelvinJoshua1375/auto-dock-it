@@ -70,8 +70,15 @@ def _with_retries(fn: Callable[[], str]) -> str:
 
 class _GeminiBackend:
     def __init__(self, settings: Settings):
-        from google import genai
-        from google.genai import types as gtypes
+        try:
+            from google import genai
+            from google.genai import types as gtypes
+        except ModuleNotFoundError as exc:
+            raise LLMError(
+                "The Gemini provider is not installed in this deployment. "
+                "Set the LLM provider to 'groq', or install the optional "
+                "'google-genai' package to use Gemini."
+            ) from exc
         self._client = genai.Client(api_key=settings.gemini_api_key)
         self._fast = settings.gemini_model_fast
         self._strong = settings.gemini_model_strong
