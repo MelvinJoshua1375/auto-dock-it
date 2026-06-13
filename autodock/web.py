@@ -270,29 +270,48 @@ _CSS_STRUCTURAL = """
     border-radius: 12px;
     background: var(--adi-code-bg) !important;
   }
-  /* Strip Pygments per-token backgrounds inside code blocks. In light mode
-     Streamlit ships a syntax theme that paints individual tokens
-     (`FROM`, `RUN`, language keywords) with a near-white inline
-     background-color, which renders as a series of disconnected white
-     chips floating inside our dark code panel. The container background
-     is owned by `--adi-code-bg`; the per-token chips need to be
-     transparent so the code reads as a single dark surface. */
-  div[data-testid="stCodeBlock"] pre,
-  div[data-testid="stCodeBlock"] pre code,
-  div[data-testid="stCodeBlock"] pre code *,
-  div[data-testid="stCodeBlock"] pre span,
-  div[data-testid="stCodeBlock"] code span {
+  /* Strip Pygments per-token backgrounds inside code blocks. Streamlit
+     paints syntax tokens (FROM, RUN, keywords, strings, etc.) with their
+     own background-colour from the Pygments theme, which surfaces as a
+     row of disconnected chips inside our otherwise solid code panel.
+     The container background is owned by `--adi-code-bg`; everything
+     nested below has to be transparent so the panel reads as a single
+     surface.
+
+     Use `body` ancestor to outrank Streamlit's bundled rules and cover:
+     1. Generic descendants (any span, code, div, p inside stCodeBlock)
+     2. The Pygments token classes directly (.k, .kn, .s, .s1, .s2, .n,
+        .nx, .nb, .nf, .o, .p, .mi, .mf, .err, .cp, .c1)
+     3. Anything with an inline style declaring its own background. */
+  body div[data-testid="stCodeBlock"] pre,
+  body div[data-testid="stCodeBlock"] pre code,
+  body div[data-testid="stCodeBlock"] pre code *,
+  body div[data-testid="stCodeBlock"] pre span,
+  body div[data-testid="stCodeBlock"] code span,
+  body div[data-testid="stCodeBlock"] pre > div,
+  body div[data-testid="stCodeBlock"] pre > p,
+  body div[data-testid="stCodeBlock"] .k,
+  body div[data-testid="stCodeBlock"] .kn,
+  body div[data-testid="stCodeBlock"] .kt,
+  body div[data-testid="stCodeBlock"] .s,
+  body div[data-testid="stCodeBlock"] .s1,
+  body div[data-testid="stCodeBlock"] .s2,
+  body div[data-testid="stCodeBlock"] .n,
+  body div[data-testid="stCodeBlock"] .nb,
+  body div[data-testid="stCodeBlock"] .nf,
+  body div[data-testid="stCodeBlock"] .nx,
+  body div[data-testid="stCodeBlock"] .o,
+  body div[data-testid="stCodeBlock"] .p,
+  body div[data-testid="stCodeBlock"] .mi,
+  body div[data-testid="stCodeBlock"] .mf,
+  body div[data-testid="stCodeBlock"] .err,
+  body div[data-testid="stCodeBlock"] .cp,
+  body div[data-testid="stCodeBlock"] .c1,
+  body div[data-testid="stCodeBlock"] [style*="background"] {
     background-color: transparent !important;
     background: transparent !important;
-  }
-  /* The live log panel uses `st.code(...)` with a plain language, which
-     ships as a `<pre>` inside the same `stCodeBlock` wrapper. Some
-     versions of Streamlit additionally wrap each line in a `<div>` with
-     its own background; flatten that too. */
-  div[data-testid="stCodeBlock"] pre > div,
-  div[data-testid="stCodeBlock"] pre > p {
-    background-color: transparent !important;
-    background: transparent !important;
+    box-shadow: none !important;
+    border: 0 !important;
   }
 
   /* Sidebar */
