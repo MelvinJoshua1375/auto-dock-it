@@ -869,14 +869,14 @@ _CSS_LIGHT_OVERRIDES = """
      :not(pre)>code targets backtick spans inside p/li — excludes fenced blocks */
   :not(pre) > code {
     background-color: var(--adi-code-bg) !important;
-    color: var(--adi-text) !important;
+    color: #f5f5f5 !important;
     border: 1px solid var(--adi-border2) !important;
     border-radius: 4px !important;
   }
   [data-testid="stMarkdownContainer"] p code,
   [data-testid="stMarkdownContainer"] li code {
     background-color: var(--adi-code-bg) !important;
-    color: var(--adi-text) !important;
+    color: #f5f5f5 !important;
     border: 1px solid var(--adi-border2) !important;
     border-radius: 4px !important;
   }
