@@ -92,7 +92,8 @@ _CSS_VARS_LIGHT = """
     --adi-btn-text:     #111111;
     --adi-primary-bg:   #111111;
     --adi-primary-text: #ffffff;
-    --adi-code-bg:      #f4f4f4;
+    /* Keep code panels as a dark terminal surface in light mode too. */
+    --adi-code-bg:      #0d0d0d;
     --adi-input-bg:     #ffffff;
     --adi-eyebrow:      #555555;
     --adi-tab-bg:       #efefef;
@@ -1110,45 +1111,38 @@ _CSS_LIGHT_OVERRIDES = """
   body [data-baseweb="option"] span,
   body [data-baseweb="option"] p { color: var(--adi-text) !important; }
 
-  /* ── Code blocks: clean single-card design (light mode) ─────────────────── */
-  /* One white card at the outer stCodeBlock boundary — zero nested boxes.
-     All inner emotion-generated wrappers collapse to transparent so only the
-     outer border/shadow is visible.  Syntax-highlight span colours (diff
-     red/green) are unaffected because they're set directly on child spans.    */
-
-  /* Outer container — the ONE styled surface */
+  /* ── Code blocks in light mode: keep the dark terminal aesthetic.
+     The earlier design painted code blocks as white cards in light mode.
+     That fragmented as soon as Streamlit's per-line emotion-cache classes
+     shipped their own opaque highlights, leaving grey chips around every
+     line. Switch to a single dark terminal surface that reads the same
+     way in both themes - calmer, no chip leakage, and matches the
+     "embedded terminal" mental model of a live agent log. */
   div[data-testid="stCodeBlock"] {
-    background: #ffffff !important;
-    border: 1px solid #e0e0e0 !important;
+    background: #0d0d0d !important;
+    border: 1px solid #1f1f1f !important;
     border-radius: 10px !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.07) !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.20) !important;
   }
-  /* Inner emotion wrappers + plain div layers → transparent, no borders
-     (kills both the double-box AND the per-line separator that appears when
-     Streamlit's toolbar-row border-bottom is exposed by a transparent bg)    */
-  div[data-testid="stCodeBlock"] [class*="st-emotion-cache"],
-  div[data-testid="stCodeBlock"] > div,
-  div[data-testid="stCodeBlock"] > div > div,
-  div[data-testid="stCodeBlock"] > div > div > div {
+  /* Every inner wrapper drops its background and any side-borders so the
+     outer terminal surface is the only painted layer. */
+  div[data-testid="stCodeBlock"] *:not(:is([data-testid="stCodeBlock"])) {
     background: transparent !important;
+    background-color: transparent !important;
     border-top: none !important;
     border-bottom: none !important;
+    box-shadow: none !important;
   }
-  /* pre + code: transparent so outer white shows through; text pure near-black */
+  /* Light text on the dark terminal surface (overrides Pygments light
+     theme's near-black token colours). */
   div[data-testid="stCodeBlock"] pre,
   div[data-testid="stCodeBlock"] code,
-  div[data-testid="stCodeBlock"] pre code {
-    background: transparent !important;
-    color: #111111 !important;
-    border: none !important;
-  }
-  /* Spans inside code (syntax-highlight tokens): no borders, strict B&W colours */
+  div[data-testid="stCodeBlock"] pre code,
   div[data-testid="stCodeBlock"] pre span,
   div[data-testid="stCodeBlock"] code span {
-    border: none !important;
-    border-bottom: none !important;
+    color: #f5f5f5 !important;
   }
-  /* Diff token colours → B&W only (deleted = grey, inserted = near-black) */
+  /* Diff token colours stay monochrome and legible on the dark surface. */
   div[data-testid="stCodeBlock"] .token.deleted,
   div[data-testid="stCodeBlock"] .hljs-deletion,
   div[data-testid="stCodeBlock"] span[class*="deleted"] {
@@ -1157,7 +1151,7 @@ _CSS_LIGHT_OVERRIDES = """
   div[data-testid="stCodeBlock"] .token.inserted,
   div[data-testid="stCodeBlock"] .hljs-addition,
   div[data-testid="stCodeBlock"] span[class*="inserted"] {
-    color: #111111 !important;
+    color: #f5f5f5 !important;
   }
 
   /* Fenced blocks inside st.markdown — emotion wrapper IS the card here.
