@@ -2,6 +2,7 @@
 # keep the Streamlit Cloud build small and reliable (it pulls cryptography,
 # google-auth, websockets, etc.). The default provider is Groq. To enable
 # Gemini in a self-hosted install, add: google-genai>=1.0.0
+# Build trigger: force Streamlit Cloud cache invalidation by touching this file.
 groq>=0.11.0
 gitpython>=3.1.40
 pydantic>=2.5.0
