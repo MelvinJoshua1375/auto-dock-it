@@ -1318,6 +1318,50 @@ def _inject_js() -> None:
       if(target)obs.observe(target,{childList:true,subtree:true,attributes:true,attributeFilter:['style']});
     },1000);
   }
+
+  /* ── Primary form-submit button: paint via inline style with !important.
+     Stylesheet rules keep losing to Streamlit's bundled emotion CSS that
+     ships `color: rgba(245,245,245,0.4) !important` on the disabled state
+     and `background-color: transparent !important` on the rest. Inline
+     styles with !important live in the CSSOM at a higher cascade level
+     than any stylesheet rule, so we set them by hand on every render. */
+  function paintFormSubmits(){
+    var css=getComputedStyle(document.documentElement);
+    var primBg=css.getPropertyValue('--adi-primary-bg').trim()||'#f5f5f5';
+    var primText=css.getPropertyValue('--adi-primary-text').trim()||'#0a0a0a';
+    var btns=document.querySelectorAll(
+      'button[data-testid="stBaseButton-primaryFormSubmit"],'+
+      'button[kind="primaryFormSubmit"]'
+    );
+    btns.forEach(function(b){
+      b.style.setProperty('background-color',primBg,'important');
+      b.style.setProperty('color',primText,'important');
+      b.style.setProperty('border-color',primBg,'important');
+      b.style.setProperty('opacity',b.disabled?'0.55':'1','important');
+      b.querySelectorAll('*').forEach(function(el){
+        /* Skip the Material icon glyph's own font-family etc; only paint colour. */
+        el.style.setProperty('color',primText,'important');
+        el.style.setProperty('opacity','1','important');
+      });
+    });
+  }
+  paintFormSubmits();
+  /* Re-paint on any subtree change (Streamlit re-renders the form often) and
+     on theme swaps. */
+  new MutationObserver(function(muts){
+    /* throttle: only repaint if any added/removed node is a button or contains one */
+    for(var i=0;i<muts.length;i++){
+      var m=muts[i];
+      if(m.target && (m.target.matches && (m.target.matches('button')||m.target.querySelector&&m.target.querySelector('button')))){
+        paintFormSubmits();return;
+      }
+    }
+    paintFormSubmits();
+  }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled','class','style']});
+  var paintN=0;var paintId=setInterval(function(){
+    paintFormSubmits();
+    if(++paintN>=30)clearInterval(paintId);
+  },200);
 })();
 </script>""",
         unsafe_allow_html=True,
