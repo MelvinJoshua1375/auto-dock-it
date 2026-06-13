@@ -154,8 +154,15 @@ _CSS_STRUCTURAL = """
            <button> (eye)
      Giving border to both produced the double-ring. Only the outer gets it.  */
 
-  /* OUTER root: the single visible border surface */
-  [data-baseweb="input"] {
+  /* OUTER root: the single visible border surface. Covers both single-line
+     <input> wrappers (data-baseweb="input") AND multi-line <textarea>
+     wrappers (data-baseweb="textarea", testid="stTextAreaRootElement").
+     Without the textarea selector the Dockerfile / Improve inputs kept
+     Streamlit's near-black bg in light mode and the typed text was
+     invisible. */
+  [data-baseweb="input"],
+  [data-baseweb="textarea"],
+  [data-testid="stTextAreaRootElement"] {
     border-radius: 10px !important;
     border: 1px solid var(--adi-border2) !important;
     background: var(--adi-input-bg) !important;
@@ -163,10 +170,14 @@ _CSS_STRUCTURAL = """
     overflow: hidden !important;
     transition: border-color .15s ease, box-shadow .15s ease !important;
   }
-  [data-baseweb="input"]:hover {
+  [data-baseweb="input"]:hover,
+  [data-baseweb="textarea"]:hover,
+  [data-testid="stTextAreaRootElement"]:hover {
     border-color: var(--adi-text2) !important;
   }
-  [data-baseweb="input"]:focus-within {
+  [data-baseweb="input"]:focus-within,
+  [data-baseweb="textarea"]:focus-within,
+  [data-testid="stTextAreaRootElement"]:focus-within {
     border-color: var(--adi-text) !important;
     box-shadow: 0 0 0 1px var(--adi-text) !important;
   }
