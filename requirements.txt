@@ -15,5 +15,7 @@ requests>=2.31.0
 # pull the newest Streamlit, whose API changes can crash the app at runtime
 # ("Error running app"). These are the versions verified working.
 streamlit==1.42.0
-streamlit-lottie==0.0.5
+# streamlit-lottie removed: frontend assets fail to load on Streamlit Cloud.
+# Lottie now rendered via @lottiefiles/lottie-player web component inside
+# st.components.v1.html (see autodock/web.py:_render_lottie).
 # cache-bust: force Streamlit Cloud rebuild for d038052 stCode fix

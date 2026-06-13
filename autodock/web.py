@@ -1396,13 +1396,56 @@ def _render_lottie(
     loop: bool = True,
     speed: float = 1.0,
 ) -> bool:
-    """Render a bundled Lottie animation. Returns True if successful."""
+    """Render a bundled Lottie animation via @lottiefiles/lottie-player.
+
+    streamlit-lottie's bundled frontend assets fail to load on Streamlit
+    Cloud for some accounts ("having trouble loading the component"). The
+    web-component fallback fetches the player from a CDN inside an iframe
+    that st.components.v1.html sets up, sidestepping the broken path. Key
+    is unused but kept for call-site compatibility.
+    """
+    del key
     data = _load_lottie(name)
     if data is None:
         return False
     try:
-        from streamlit_lottie import st_lottie
-        st_lottie(data, height=height, loop=loop, speed=speed, quality="high", key=key)
+        import streamlit.components.v1 as components
+        payload = json.dumps(data).replace("</", "<\\/")
+        loop_attr = "true" if loop else "false"
+        html = f"""
+        <div style="display:flex;justify-content:center;align-items:center;">
+          <lottie-player id="lp" autoplay {"loop" if loop else ""}
+            background="transparent" speed="{speed}"
+            style="width:100%;height:{height}px;"></lottie-player>
+        </div>
+        <script>
+          (function() {{
+            const data = {payload};
+            const CDNS = [
+              "https://unpkg.com/@lottiefiles/lottie-player@2.0.8/dist/lottie-player.js",
+              "https://cdn.jsdelivr.net/npm/@lottiefiles/lottie-player@2.0.8/dist/lottie-player.js"
+            ];
+            const mountWhenReady = () => {{
+              const p = document.getElementById("lp");
+              if (!p || !p.load) {{ setTimeout(mountWhenReady, 60); return; }}
+              p.load(data);
+              p.setSpeed({speed});
+              p.setLooping({loop_attr});
+              p.play();
+            }};
+            const tryCDN = (i) => {{
+              if (i >= CDNS.length) return;
+              const s = document.createElement("script");
+              s.src = CDNS[i];
+              s.onload = mountWhenReady;
+              s.onerror = () => tryCDN(i + 1);
+              document.head.appendChild(s);
+            }};
+            tryCDN(0);
+          }})();
+        </script>
+        """
+        components.html(html, height=height + 8)
         return True
     except Exception:
         return False
