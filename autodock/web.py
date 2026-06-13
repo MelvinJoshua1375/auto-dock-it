@@ -730,6 +730,50 @@ _CSS_STRUCTURAL = """
   /* ── URL validation indicator styles ─────────────────────────────────────── */
   .adi-url-ok  { color: #333333 !important; font-size: .82rem; font-weight: 600; }
   .adi-url-err { color: #888888 !important; font-size: .82rem; font-weight: 600; }
+
+  /* ── Primary button text visibility (both themes, both st.button and st.form_submit_button)
+     This block MUST live in _CSS_STRUCTURAL (which is injected on every render),
+     not in _CSS_LIGHT_OVERRIDES (which only injects when the user is in light
+     mode). The submit-button form variant ships as `kind="primaryFormSubmit"`
+     and testid `stBaseButton-primaryFormSubmit`; the standalone variant is
+     `kind="primary"` inside `.stButton`. Both branches paint the surface from
+     `--adi-primary-bg` and the label from `--adi-primary-text`, so the colours
+     automatically follow the active theme. ─────────────────────────────────── */
+  body .stButton > button[kind="primary"],
+  body .stButton > button[kind="primary"]:hover,
+  body .stButton > button[kind="primary"]:focus,
+  body .stButton > button[kind="primary"]:active,
+  body .stButton > button[kind="primary"][disabled],
+  body .stFormSubmitButton > button,
+  body .stFormSubmitButton > button:hover,
+  body .stFormSubmitButton > button:focus,
+  body .stFormSubmitButton > button:active,
+  body .stFormSubmitButton > button[disabled],
+  body [data-testid="stFormSubmitButton"] button,
+  body button[data-testid="stBaseButton-primaryFormSubmit"],
+  body button[kind="primaryFormSubmit"] {
+    background-color: var(--adi-primary-bg) !important;
+    color: var(--adi-primary-text) !important;
+    border-color: var(--adi-primary-bg) !important;
+  }
+  body .stButton > button[kind="primary"] p,
+  body .stButton > button[kind="primary"] span,
+  body .stButton > button[kind="primary"] *,
+  body .stFormSubmitButton > button p,
+  body .stFormSubmitButton > button span,
+  body .stFormSubmitButton > button *,
+  body [data-testid="stFormSubmitButton"] button *,
+  body button[data-testid="stBaseButton-primaryFormSubmit"] *,
+  body button[kind="primaryFormSubmit"] * {
+    color: var(--adi-primary-text) !important;
+  }
+  body button[data-testid="stBaseButton-primaryFormSubmit"][disabled],
+  body button[kind="primaryFormSubmit"][disabled],
+  body button[data-testid="stBaseButton-primaryFormSubmit"][disabled] *,
+  body button[kind="primaryFormSubmit"][disabled] * {
+    opacity: 0.55 !important;
+    cursor: not-allowed !important;
+  }
 """
 
 # Extra Streamlit surface overrides needed ONLY in light mode.
@@ -853,56 +897,6 @@ _CSS_LIGHT_OVERRIDES = """
     fill: var(--adi-text) !important;
     color: var(--adi-text) !important;
     stroke: var(--adi-text) !important;
-  }
-
-  /* ── Fix: Primary button text visibility (all states including disabled) ─── */
-  /* Includes the form-submit variant: when the primary button lives inside
-     st.form(...) it ships as .stFormSubmitButton, NOT .stButton, so previous
-     rules silently fell through and produced white text on the white pill. */
-  /* Streamlit's form submit ships as `kind="primaryFormSubmit"`, NOT
-     `kind="primary"`. The earlier selectors that scoped on
-     `[kind="primary"]` matched nothing and the deployed Containerize
-     button rendered as white-on-white (effectively invisible). Match the
-     submit button on its real attributes and use a `body` ancestor to
-     outrank Streamlit's bundled !important rules that set `color:
-     rgba(245,245,245,0.4)` on disabled and `background-color: transparent`
-     across the board. */
-  body .stButton > button[kind="primary"],
-  body .stButton > button[kind="primary"]:hover,
-  body .stButton > button[kind="primary"]:focus,
-  body .stButton > button[kind="primary"]:active,
-  body .stButton > button[kind="primary"][disabled],
-  body .stFormSubmitButton > button,
-  body .stFormSubmitButton > button:hover,
-  body .stFormSubmitButton > button:focus,
-  body .stFormSubmitButton > button:active,
-  body .stFormSubmitButton > button[disabled],
-  body [data-testid="stFormSubmitButton"] button,
-  body button[data-testid="stBaseButton-primaryFormSubmit"],
-  body button[kind="primaryFormSubmit"] {
-    background-color: var(--adi-primary-bg) !important;
-    color: var(--adi-primary-text) !important;
-    border-color: var(--adi-primary-bg) !important;
-  }
-  body .stButton > button[kind="primary"] p,
-  body .stButton > button[kind="primary"] span,
-  body .stButton > button[kind="primary"] *,
-  body .stFormSubmitButton > button p,
-  body .stFormSubmitButton > button span,
-  body .stFormSubmitButton > button *,
-  body [data-testid="stFormSubmitButton"] button *,
-  body button[data-testid="stBaseButton-primaryFormSubmit"] *,
-  body button[kind="primaryFormSubmit"] * {
-    color: var(--adi-primary-text) !important;
-  }
-  /* Disabled state: keep the dark-on-white contrast, just dim to 55% so
-     the affordance is obvious without hiding the label entirely. */
-  body button[data-testid="stBaseButton-primaryFormSubmit"][disabled],
-  body button[kind="primaryFormSubmit"][disabled],
-  body button[data-testid="stBaseButton-primaryFormSubmit"][disabled] *,
-  body button[kind="primaryFormSubmit"][disabled] * {
-    opacity: 0.55 !important;
-    cursor: not-allowed !important;
   }
 
   /* ── Fix: Placeholder text visibility in inputs ──────────────────────── */
@@ -1319,49 +1313,6 @@ def _inject_js() -> None:
     },1000);
   }
 
-  /* ── Primary form-submit button: paint via inline style with !important.
-     Stylesheet rules keep losing to Streamlit's bundled emotion CSS that
-     ships `color: rgba(245,245,245,0.4) !important` on the disabled state
-     and `background-color: transparent !important` on the rest. Inline
-     styles with !important live in the CSSOM at a higher cascade level
-     than any stylesheet rule, so we set them by hand on every render. */
-  function paintFormSubmits(){
-    var css=getComputedStyle(document.documentElement);
-    var primBg=css.getPropertyValue('--adi-primary-bg').trim()||'#f5f5f5';
-    var primText=css.getPropertyValue('--adi-primary-text').trim()||'#0a0a0a';
-    var btns=document.querySelectorAll(
-      'button[data-testid="stBaseButton-primaryFormSubmit"],'+
-      'button[kind="primaryFormSubmit"]'
-    );
-    btns.forEach(function(b){
-      b.style.setProperty('background-color',primBg,'important');
-      b.style.setProperty('color',primText,'important');
-      b.style.setProperty('border-color',primBg,'important');
-      b.style.setProperty('opacity',b.disabled?'0.55':'1','important');
-      b.querySelectorAll('*').forEach(function(el){
-        /* Skip the Material icon glyph's own font-family etc; only paint colour. */
-        el.style.setProperty('color',primText,'important');
-        el.style.setProperty('opacity','1','important');
-      });
-    });
-  }
-  paintFormSubmits();
-  /* Re-paint on any subtree change (Streamlit re-renders the form often) and
-     on theme swaps. */
-  new MutationObserver(function(muts){
-    /* throttle: only repaint if any added/removed node is a button or contains one */
-    for(var i=0;i<muts.length;i++){
-      var m=muts[i];
-      if(m.target && (m.target.matches && (m.target.matches('button')||m.target.querySelector&&m.target.querySelector('button')))){
-        paintFormSubmits();return;
-      }
-    }
-    paintFormSubmits();
-  }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled','class','style']});
-  var paintN=0;var paintId=setInterval(function(){
-    paintFormSubmits();
-    if(++paintN>=30)clearInterval(paintId);
-  },200);
 })();
 </script>""",
         unsafe_allow_html=True,
