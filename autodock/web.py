@@ -307,7 +307,14 @@ _CSS_STRUCTURAL = """
   body div[data-testid="stCodeBlock"] .err,
   body div[data-testid="stCodeBlock"] .cp,
   body div[data-testid="stCodeBlock"] .c1,
-  body div[data-testid="stCodeBlock"] [style*="background"] {
+  body div[data-testid="stCodeBlock"] [style*="background"],
+  /* Nuclear option: every descendant of stCodeBlock except the outer
+     wrapper itself loses its background. The outer wrapper still owns
+     the surface via `--adi-code-bg`; nothing nested below it should
+     introduce its own colour. This catches the per-line row chips that
+     Streamlit's emotion-cache classes (e.g. `st-ae > div.st-ca.st-af`)
+     ship with a `rgba(245, 245, 245, 0.1)` overlay in dark mode. */
+  body div[data-testid="stCodeBlock"] *:not(:is([data-testid="stCodeBlock"])) {
     background-color: transparent !important;
     background: transparent !important;
     box-shadow: none !important;
