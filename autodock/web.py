@@ -266,7 +266,7 @@ _CSS_STRUCTURAL = """
   .stCode, pre, code {
     font-family: 'JetBrains Mono','SFMono-Regular',Consolas,monospace !important;
   }
-  div[data-testid="stCodeBlock"] {
+  div[data-testid="stCode"] {
     border: 1px solid var(--adi-border);
     border-radius: 12px;
     background: var(--adi-code-bg) !important;
@@ -280,44 +280,65 @@ _CSS_STRUCTURAL = """
      surface.
 
      Use `body` ancestor to outrank Streamlit's bundled rules and cover:
-     1. Generic descendants (any span, code, div, p inside stCodeBlock)
+     1. Generic descendants (any span, code, div, p inside stCode)
      2. The Pygments token classes directly (.k, .kn, .s, .s1, .s2, .n,
         .nx, .nb, .nf, .o, .p, .mi, .mf, .err, .cp, .c1)
      3. Anything with an inline style declaring its own background. */
-  body div[data-testid="stCodeBlock"] pre,
-  body div[data-testid="stCodeBlock"] pre code,
-  body div[data-testid="stCodeBlock"] pre code *,
-  body div[data-testid="stCodeBlock"] pre span,
-  body div[data-testid="stCodeBlock"] code span,
-  body div[data-testid="stCodeBlock"] pre > div,
-  body div[data-testid="stCodeBlock"] pre > p,
-  body div[data-testid="stCodeBlock"] .k,
-  body div[data-testid="stCodeBlock"] .kn,
-  body div[data-testid="stCodeBlock"] .kt,
-  body div[data-testid="stCodeBlock"] .s,
-  body div[data-testid="stCodeBlock"] .s1,
-  body div[data-testid="stCodeBlock"] .s2,
-  body div[data-testid="stCodeBlock"] .n,
-  body div[data-testid="stCodeBlock"] .nb,
-  body div[data-testid="stCodeBlock"] .nf,
-  body div[data-testid="stCodeBlock"] .nx,
-  body div[data-testid="stCodeBlock"] .o,
-  body div[data-testid="stCodeBlock"] .p,
-  body div[data-testid="stCodeBlock"] .mi,
-  body div[data-testid="stCodeBlock"] .mf,
-  body div[data-testid="stCodeBlock"] .err,
-  body div[data-testid="stCodeBlock"] .cp,
-  body div[data-testid="stCodeBlock"] .c1,
-  body div[data-testid="stCodeBlock"] [style*="background"],
-  /* Nuclear option: every descendant of stCodeBlock except the outer
+  body div[data-testid="stCode"] pre,
+  body div[data-testid="stCode"] pre code,
+  body div[data-testid="stCode"] pre code *,
+  body div[data-testid="stCode"] pre span,
+  body div[data-testid="stCode"] code span,
+  body div[data-testid="stCode"] pre > div,
+  body div[data-testid="stCode"] pre > p,
+  body div[data-testid="stCode"] .k,
+  body div[data-testid="stCode"] .kn,
+  body div[data-testid="stCode"] .kt,
+  body div[data-testid="stCode"] .s,
+  body div[data-testid="stCode"] .s1,
+  body div[data-testid="stCode"] .s2,
+  body div[data-testid="stCode"] .n,
+  body div[data-testid="stCode"] .nb,
+  body div[data-testid="stCode"] .nf,
+  body div[data-testid="stCode"] .nx,
+  body div[data-testid="stCode"] .o,
+  body div[data-testid="stCode"] .p,
+  body div[data-testid="stCode"] .mi,
+  body div[data-testid="stCode"] .mf,
+  body div[data-testid="stCode"] .err,
+  body div[data-testid="stCode"] .cp,
+  body div[data-testid="stCode"] .c1,
+  body div[data-testid="stCode"] [style*="background"],
+  /* Nuclear option: every descendant of stCode except the outer
      wrapper itself loses its background. The outer wrapper still owns
      the surface via `--adi-code-bg`; nothing nested below it should
      introduce its own colour. This catches the per-line row chips that
      Streamlit's emotion-cache classes (e.g. `st-ae > div.st-ca.st-af`)
      ship with a `rgba(245, 245, 245, 0.1)` overlay in dark mode. */
-  body div[data-testid="stCodeBlock"] *:not(:is([data-testid="stCodeBlock"])) {
+  body div[data-testid="stCode"] *,
+  body div[data-testid="stCode"] pre,
+  body div[data-testid="stCode"] code,
+  body div[data-testid="stCode"] div,
+  body div[data-testid="stCode"] span,
+  body div[data-testid="stCode"] p,
+  /* Streamlit 1.42+ uses prism.js token classes (not Pygments). Target the
+     full set so every keyword/string/instruction span keeps a transparent
+     surface even though Prism's default theme paints them otherwise. */
+  body div[data-testid="stCode"] .token,
+  body div[data-testid="stCode"] .token.instruction,
+  body div[data-testid="stCode"] .token.keyword,
+  body div[data-testid="stCode"] .token.string,
+  body div[data-testid="stCode"] .token.comment,
+  body div[data-testid="stCode"] .token.number,
+  body div[data-testid="stCode"] .token.operator,
+  body div[data-testid="stCode"] .token.punctuation,
+  body div[data-testid="stCode"] .token.function,
+  body div[data-testid="stCode"] .token.property,
+  body div[data-testid="stCode"] .token.attr-name,
+  body div[data-testid="stCode"] .token.attr-value {
     background-color: transparent !important;
     background: transparent !important;
+    background-image: none !important;
     box-shadow: none !important;
     border: 0 !important;
   }
@@ -1118,7 +1139,7 @@ _CSS_LIGHT_OVERRIDES = """
      line. Switch to a single dark terminal surface that reads the same
      way in both themes - calmer, no chip leakage, and matches the
      "embedded terminal" mental model of a live agent log. */
-  div[data-testid="stCodeBlock"] {
+  div[data-testid="stCode"] {
     background: #0d0d0d !important;
     border: 1px solid #1f1f1f !important;
     border-radius: 10px !important;
@@ -1126,31 +1147,37 @@ _CSS_LIGHT_OVERRIDES = """
   }
   /* Every inner wrapper drops its background and any side-borders so the
      outer terminal surface is the only painted layer. */
-  div[data-testid="stCodeBlock"] *:not(:is([data-testid="stCodeBlock"])) {
+  body div[data-testid="stCode"] *,
+  body div[data-testid="stCode"] pre,
+  body div[data-testid="stCode"] code,
+  body div[data-testid="stCode"] div,
+  body div[data-testid="stCode"] span,
+  body div[data-testid="stCode"] p {
     background: transparent !important;
-    background-color: transparent !important;
+    background-color: unset !important;
+    background-image: unset !important;
     border-top: none !important;
     border-bottom: none !important;
     box-shadow: none !important;
   }
   /* Light text on the dark terminal surface (overrides Pygments light
      theme's near-black token colours). */
-  div[data-testid="stCodeBlock"] pre,
-  div[data-testid="stCodeBlock"] code,
-  div[data-testid="stCodeBlock"] pre code,
-  div[data-testid="stCodeBlock"] pre span,
-  div[data-testid="stCodeBlock"] code span {
+  div[data-testid="stCode"] pre,
+  div[data-testid="stCode"] code,
+  div[data-testid="stCode"] pre code,
+  div[data-testid="stCode"] pre span,
+  div[data-testid="stCode"] code span {
     color: #f5f5f5 !important;
   }
   /* Diff token colours stay monochrome and legible on the dark surface. */
-  div[data-testid="stCodeBlock"] .token.deleted,
-  div[data-testid="stCodeBlock"] .hljs-deletion,
-  div[data-testid="stCodeBlock"] span[class*="deleted"] {
+  div[data-testid="stCode"] .token.deleted,
+  div[data-testid="stCode"] .hljs-deletion,
+  div[data-testid="stCode"] span[class*="deleted"] {
     color: #888888 !important;
   }
-  div[data-testid="stCodeBlock"] .token.inserted,
-  div[data-testid="stCodeBlock"] .hljs-addition,
-  div[data-testid="stCodeBlock"] span[class*="inserted"] {
+  div[data-testid="stCode"] .token.inserted,
+  div[data-testid="stCode"] .hljs-addition,
+  div[data-testid="stCode"] span[class*="inserted"] {
     color: #f5f5f5 !important;
   }
 
