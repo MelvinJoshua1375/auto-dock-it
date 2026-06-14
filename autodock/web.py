@@ -1377,6 +1377,56 @@ def _inject_js() -> None:
     )
 
 
+def _inject_session_error_friendly() -> None:
+    """Rewrite Streamlit's internal session-error dialog into plain English.
+
+    After a Cloud rebuild or a brief WebSocket drop the server can ship a
+    modal titled "Bad message format / Tried to use SessionInfo before it
+    was initialized". Reach into the parent document from a height-zero
+    components.html iframe and rewrite both lines on sight, so users see
+    a recovery hint instead of internal jargon.
+    """
+    import streamlit.components.v1 as components
+    components.html(
+        """
+        <script>
+        (function(){
+          var TITLE = /Bad message format/i;
+          var BODY  = /SessionInfo before it was initialized|Tried to use SessionInfo/i;
+          function rewrite(root){
+            if(!root || !root.querySelectorAll) return;
+            var nodes = root.querySelectorAll('h1,h2,h3,h4,p,span,div');
+            for(var i=0;i<nodes.length;i++){
+              var n=nodes[i];
+              if(n.children.length>0) continue;
+              var t=(n.textContent||'').trim();
+              if(TITLE.test(t)){
+                n.textContent='Reconnecting to the app';
+              } else if(BODY.test(t)){
+                n.textContent='The server just restarted. Refresh the page in a few seconds and you should be back.';
+              }
+            }
+          }
+          var doc;
+          try { doc = window.parent && window.parent.document; }
+          catch(e) { return; }
+          if(!doc || !doc.body) return;
+          rewrite(doc);
+          new MutationObserver(function(muts){
+            for(var i=0;i<muts.length;i++){
+              var added=muts[i].addedNodes;
+              for(var j=0;j<added.length;j++){
+                if(added[j].nodeType===1) rewrite(added[j]);
+              }
+            }
+          }).observe(doc.body,{childList:true,subtree:true});
+        })();
+        </script>
+        """,
+        height=0,
+    )
+
+
 # ─────────────────────────────────────────────────────────────── Lottie helpers
 def _load_lottie(name: str):
     """Load a bundled Lottie JSON by filename; return None on any failure."""
@@ -1613,6 +1663,7 @@ def render() -> None:
     # CSS is injected before any widgets so the theme is applied on every re-run.
     _inject_css()
     _inject_js()
+    _inject_session_error_friendly()
 
     # ── Hero ──────────────────────────────────────────────────────────────── #
     col_text, _gap, col_anim = st.columns([5, 1, 4], gap="medium")
