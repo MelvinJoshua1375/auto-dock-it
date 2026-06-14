@@ -1756,9 +1756,10 @@ def render() -> None:
     preview_mode = not _docker_available(docker_bin)
     if preview_mode:
         st.info(
-            "**Preview mode** - Docker is not reachable from this environment. "
+            "**Preview mode**: Docker is not reachable from this environment. "
             "The pipeline will run ingest, analyze, and generate only. "
-            "Clone the repo and run `autodock run <url>` locally for the full "
+            "Clone the repo, install with `pip install -e .`, "
+            "and run `autodock run <url>` locally for the full "
             "self-healing containerization flow."
         )
 
