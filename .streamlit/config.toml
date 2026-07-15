@@ -14,3 +14,4 @@ font = "sans serif"
 
 [server]
 headless = true
+fileWatcherType = "poll"
